@@ -5,8 +5,6 @@
 #include <stdalign.h>
 #include <stdint.h>
 
-#define N 4
-
 // clmul fra num1 e num2, salvata in ris
 __m256i clmul (__m128i val1, __m128i val2);
 // stampa m256i
