@@ -1,0 +1,19 @@
+# depslib dependency file v1.0
+1521209706 source:/home/utente/Scrivania/ProgettoCript/Array_Clmul/main.c
+	<math.h>
+	<stdio.h>
+	<immintrin.h>
+	<emmintrin.h>
+	<stdalign.h>
+	<stdint.h>
+	<inttypes.h>
+	"Clmul.h"
+
+1521116814 /home/utente/Scrivania/ProgettoCript/Array_Clmul/Clmul.h
+	<math.h>
+	<stdio.h>
+	<emmintrin.h>
+	<immintrin.h>
+	<stdalign.h>
+	<stdint.h>
+
