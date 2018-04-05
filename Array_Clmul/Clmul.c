@@ -15,7 +15,7 @@
 // clmul fra num1 e num2, salvata in ris
 __m256i clmul (__m128i val1, __m128i val2);
 // stampa m256i
-//void print__m256 (__m256i num);
+void print__m256 (__m256i num);
 // stampa m128i
 void print__m128 (__m128i num);
 
@@ -68,14 +68,14 @@ void parse_vet_64 (uint64_t num, uint64_t vet[], uint32_t pos) {
 void print__m256 (__m256i num) {
     alignas(32) uint32_t v[8];
     _mm256_store_si256((__m256i*)v, num);
-    printf("__m256 : %u %u %u %u %u %u %u %u\n", v[7], v[6], v[5], v[4], v[3], v[2], v[1], v[0]); //%08X
+    printf("__m256 : %08X %08X %08X %08X %08X %08X %08X %08x\n", v[7], v[6], v[5], v[4], v[3], v[2], v[1], v[0]);
 }
 
 // stampa mm128i
 void print__m128 (__m128i num) {
     alignas(16) uint32_t v[4];
     _mm_store_si128((__m128i*)v, num);
-    printf("__m128 : %u %u %u %u\n", v[3], v[2], v[1], v[0]);
+    printf("__m128 : %08X %08X %08X %08x\n", v[3], v[2], v[1], v[0]);
 }
 
 // clmul fra num1 e num2, salvata in ris

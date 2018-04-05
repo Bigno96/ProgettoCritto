@@ -18,7 +18,7 @@ void normal_mul (__m128i *num1, __m128i *num2, __m256i *ris);
 // clmul fra num1 e num2, salvata in ris
 __m256i clmul (__m128i val1, __m128i val2);
 // stampa m256i
-//void print__m256 (__m256i num);
+void print__m256 (__m256i num);
 // stampa m128i
 void print__m128 (__m128i num);
 

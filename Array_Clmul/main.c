@@ -15,7 +15,7 @@ int main(int argc, char *argv[]) {
     uint32_t n1, n2, n3;
     n1 = 4;
     n2 = 3;
-    n3 = (n1 + 1 >> 1) + (n2 + 1 >> 1) - 1;
+    n3 = ((n1 + 1) >> 1) + ((n2 + 1) >> 1) - 1;
 
     uint64_t Vett1[N], Vett2[N];
     __m256i Res[N];
@@ -23,8 +23,8 @@ int main(int argc, char *argv[]) {
 
     Vett1[0] = (uint64_t)UINT64_MAX;
     Vett2[0] = (uint64_t)6;
-    Vett1[1] = (uint64_t)1;
-    Vett2[1] = (uint64_t)6;
+    Vett1[1] = (uint64_t)0;
+    Vett2[1] = (uint64_t)71;
     Vett1[2] = (uint64_t)4;
 //    Vett2[2] = UINT64_MAX;
     Vett2[2] = (uint64_t)8;
@@ -45,7 +45,7 @@ void Array_Clmul(uint64_t Vett1[], uint64_t Vett2[], uint32_t n1, uint32_t n2,__
     int64_t i, j;
 	__m128i V1, V2;
 
-    for(i = 0; i <  (n1 + 1 >> 1) + (n2 + 1 >> 1) - 1; i++){
+    for(i = 0; i <  ((n1 + 1) >> 1) + ((n2 + 1) >> 1) - 1; i++){
        Res[i] = _mm256_set_epi64x ( (uint64_t)0, (uint64_t)0, (uint64_t)0, (uint64_t)0);
         //Res[i] = _mm256_setzero_si256;                 //setzero F
         //print__m256(Res[i]);
@@ -67,7 +67,7 @@ void Array_Clmul(uint64_t Vett1[], uint64_t Vett2[], uint32_t n1, uint32_t n2,__
             for(j = 0; j < (n2 >> 1); j++ ){
                 V2 = _mm_set_epi64x ( Vett2[2*j+1] , Vett2[2*j]);
                 ResTemp = clmul( (__m128i)V1 ,(__m128i)V2);
-                Res[ j + (n1 + 1 >> 1) - 1] ^= ResTemp;
+                Res[ j + ((n1 + 1) >> 1) - 1] ^= ResTemp;
                 }
     }
 
@@ -78,7 +78,7 @@ void Array_Clmul(uint64_t Vett1[], uint64_t Vett2[], uint32_t n1, uint32_t n2,__
             for(i = 0; i < (n1 >> 1) ; i++ ){
                 V1 = _mm_set_epi64x ( Vett2[2*i+1] , Vett2[2*i]);
                 ResTemp = clmul( (__m128i)V1 ,(__m128i)V2);
-                Res[ i + (n2 + 1 >> 1) - 1] ^= ResTemp;
+                Res[ i + ((n2 + 1) >> 1) - 1] ^= ResTemp;
             }
     }
 
@@ -86,12 +86,12 @@ void Array_Clmul(uint64_t Vett1[], uint64_t Vett2[], uint32_t n1, uint32_t n2,__
             V1 = _mm_set_epi64x ( 0 , Vett1[n1-1]);
             V2 = _mm_set_epi64x ( 0 , Vett2[n2-1]);
             ResTemp = clmul( (__m128i)V1 ,(__m128i)V2);
-            Res[ (n1 + 1 >> 1) + (n2 + 1 >> 1) -1 ] ^= ResTemp;
+            Res[ ((n1 + 1) >> 1) + ((n2 + 1) >> 1) -1 ] ^= ResTemp;
     }
 
-    for(j = 0; j < (n1 + 1 >> 1) + (n2 + 1 >> 1) - 1; j++ ) {
-            printf("for stampa %d", j);
+    for(j = 0; j < ((n1 + 1) >> 1) + ((n2 + 1) >> 1) - 1; j++ ) {
+            printf("for stampa %ld", j);
             print__m256(Res[j]);
     }
-    return 0;
+
 }
