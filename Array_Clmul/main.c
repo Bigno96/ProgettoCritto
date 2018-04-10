@@ -22,7 +22,7 @@ int main(int argc, char *argv[]) {
 
 
     Vett1[0] = (uint64_t)UINT64_MAX;
-    Vett2[0] = (uint64_t)6;
+    Vett2[0] = (uint64_t)23;
     Vett1[1] = (uint64_t)0;
     Vett2[1] = (uint64_t)71;
     Vett1[2] = (uint64_t)4;
