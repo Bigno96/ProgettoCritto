@@ -10,9 +10,13 @@ Carry_Less_for_128bit/Carry_Less_for_128bit.layout
 Carry_Less_for_128bit/Carry_Less_for_128bit.depend
 Array_Clmul/bin/
 Array_Clmul/obj/
-Array_Clmul/Carry_Less_for_128bit.cbp
-Array_Clmul/Carry_Less_for_128bit.layout
-Array_Clmul/Carry_Less_for_128bit.depend
-
+Array_Clmul/Array_Clmul.cbp
+Array_Clmul/Array_Clmul.layout
+Array_Clmul/Array_Clmul.depend
+Array_Clmul_K/bin/
+Array_Clmul_K/obj/
+Array_Clmul_K/Array_Clmul_K.cbp
+Array_Clmul_K/Array_Clmul_K.layout
+Array_Clmul_K/Array_Clmul_K.depend
 
 
