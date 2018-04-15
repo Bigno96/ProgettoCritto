@@ -8,7 +8,7 @@
 #include <stdint.h>
 #include <inttypes.h>
 
-void Array_Clmul(uint32_t n1, uint64_t Vett1[],  uint32_t n2, uint64_t Vett2[], uint32_t n3, __m256i Res[]);
+void Array_Clmul(uint32_t n3, __m256i Res[], uint32_t n1, uint64_t Vett1[],  uint32_t n2, uint64_t Vett2[]);
 
 #define N 255
 
@@ -25,18 +25,18 @@ int main(int argc, char *argv[])
 
     Vett1[0] = (uint64_t)UINT64_MAX;
     Vett2[0] = (uint64_t)1;
-    Vett1[1] = (uint64_t)0;
+    Vett1[1] = (uint64_t)3;
     Vett2[1] = (uint64_t)71;
     Vett1[2] = (uint64_t)4;
     Vett2[2] = (uint64_t)8;
     Vett1[3] = (uint64_t)0;
 
-    Array_Clmul(n1, Vett1, n2, Vett2, n3, Res);
+    Array_Clmul(n3, Res, n1, Vett1, n2, Vett2);
 
     return 0;
 }
 
-void Array_Clmul(uint32_t n1, uint64_t Vett1[], uint32_t n2, uint64_t Vett2[], uint32_t n3, __m256i Res[])
+void Array_Clmul(uint32_t n3, __m256i Res[], uint32_t n1, uint64_t Vett1[], uint32_t n2, uint64_t Vett2[])
 {
     __m256i ResTemp;
     int64_t i, j;
@@ -94,7 +94,7 @@ void Array_Clmul(uint32_t n1, uint64_t Vett1[], uint32_t n2, uint64_t Vett2[], u
 
     for(j = 0; j < ((n1 + 1) >> 1) + ((n2 + 1) >> 1) - 1; j++)
     {
-        printf("for stampa %ld", j);
+        printf("[%ld]\n", j);
         print__m256(Res[j]);
     }
 
