@@ -16,3 +16,29 @@
 	<stdalign.h>
 	<stdint.h>
 
+1523831504 source:/home/bigno/Uni/ProgettoCritto/Array_Clmul_K/main.c
+	"A_Clmul.h"
+	<math.h>
+	<stdio.h>
+	<emmintrin.h>
+	<immintrin.h>
+	<stdalign.h>
+	<stdint.h>
+	<inttypes.h>
+
+1523362706 /home/bigno/Uni/ProgettoCritto/Array_Clmul_K/Clmul.h
+	<math.h>
+	<stdio.h>
+	<emmintrin.h>
+	<immintrin.h>
+	<stdalign.h>
+	<stdint.h>
+
+1523811830 /home/bigno/Uni/ProgettoCritto/Array_Clmul_K/A_Clmul.h
+	<math.h>
+	<stdio.h>
+	<emmintrin.h>
+	<immintrin.h>
+	<stdalign.h>
+	<stdint.h>
+

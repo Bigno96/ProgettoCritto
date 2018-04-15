@@ -10,8 +10,6 @@
 
 #define N 128
 
-
-
 // clmul fra num1 e num2, salvata in ris
 __m256i clmul (__m128i val1, __m128i val2);
 // stampa m256i
@@ -31,11 +29,13 @@ __m256i ris;
 __m128i num1, num2;
 
 // restituisce int a 64bit a partire da 64 bit di un vettore, DISCENDENTE
-uint64_t parse_num_64 (uint64_t vet[], uint32_t pos) {
+uint64_t parse_num_64 (uint64_t vet[], uint32_t pos)
+{
     int32_t e=0, i=0;
     uint64_t num=0;
     // ciclo che parte dalla posizione e finisce dopo 63 elementi
-    for (i=pos, e=62; i>pos-63; e--, i--) {
+    for (i=pos, e=62; i>pos-63; e--, i--)
+    {
         if (vet[i]==1)
             num|=(uint64_t)2<<e;        // se vet[i] = 1, aggiungo 2^e al numero, altrimenti nulla
     }
@@ -46,15 +46,20 @@ uint64_t parse_num_64 (uint64_t vet[], uint32_t pos) {
 }
 
 // riempie 64bit di un vettore con un int a 64 bit, dalla pos specificata, DISCENDENTE
-void parse_vet_64 (uint64_t num, uint64_t vet[], uint32_t pos) {
+void parse_vet_64 (uint64_t num, uint64_t vet[], uint32_t pos)
+{
     int32_t e=0, i=0;
     uint64_t resto=0;
     // ciclo che parte dalla cifra 2^63 e finisce a 2^1
-    for (i=pos, e=62; i>pos-63; e--, i--) {
+    for (i=pos, e=62; i>pos-63; e--, i--)
+    {
         resto = num%((uint64_t)2<<e);     // ottengo il resto della divisione fra num e 2^e
-        if (resto==num) {
+        if (resto==num)
+        {
             vet[i]=0;
-        } else {
+        }
+        else
+        {
             vet[i]=1;
         }
         num = resto;                // ad ogni iterazione, setto num=resto
@@ -65,33 +70,39 @@ void parse_vet_64 (uint64_t num, uint64_t vet[], uint32_t pos) {
 }
 
 // stampa m256i
-void print__m256 (__m256i num) {
-    alignas(32) uint32_t v[8];
+void print__m256 (__m256i num)
+{
+    alignas(64) uint32_t v[8];
     _mm256_store_si256((__m256i*)v, num);
-    printf("__m256 : %08X %08X %08X %08X %08X %08X %08X %08x\n", v[7], v[6], v[5], v[4], v[3], v[2], v[1], v[0]);
+    printf("__m256 : %08X %08X %08X %08X %08X %08X %08X %08X\n", v[7], v[6], v[5], v[4], v[3], v[2], v[1], v[0]);
 }
 
 // stampa mm128i
-void print__m128 (__m128i num) {
-    alignas(16) uint32_t v[4];
+void print__m128 (__m128i num)
+{
+    alignas(32) uint32_t v[4];
     _mm_store_si128((__m128i*)v, num);
-    printf("__m128 : %08X %08X %08X %08x\n", v[3], v[2], v[1], v[0]);
+    printf("__m128 : %08X %08X %08X %08X\n", v[3], v[2], v[1], v[0]);
 }
 
 // clmul fra num1 e num2, salvata in ris
-void normal_mul (__m128i *num1, __m128i *num2, __m256i *ris) {
+void normal_mul (__m128i *num1, __m128i *num2, __m256i *ris)
+{
     int32_t i=0, j=0;
     uint64_t vet1[N], vet2[N];
     uint64_t res[2*N];   // arrivo a 256 bit perchè anche se la somma è lunga 255, __m256 è a 256 bit. Setterò res[255]=0.
 
     // inizializzo
-    for (i=0; i<N; i++) {
+    for (i=0; i<N; i++)
+    {
         vet1[i]=0;
     }
-    for (i=0; i<N; i++) {
+    for (i=0; i<N; i++)
+    {
         vet2[i]=0;
     }
-    for (i=0; i<2*N-1; i++) {
+    for (i=0; i<2*N-1; i++)
+    {
         res[i]=0;
     }
 
@@ -107,9 +118,12 @@ void normal_mul (__m128i *num1, __m128i *num2, __m256i *ris) {
     parse_vet_64(v[0], vet2, 63);
     parse_vet_64(v[1], vet2, 127);
 
-    for (i=0; i<N; i++) {           // scorro vet 2
-        if (vet2[i]==1) {               // se vet2 = 0, non faccio nulla, altrimenti riporto vet1 uguale
-            for (j=0; j<N; j++) {        // sommo vet1 a ris partendo da ris[i+j] (come se shiftassi vet1)
+    for (i=0; i<N; i++)             // scorro vet 2
+    {
+        if (vet2[i]==1)                 // se vet2 = 0, non faccio nulla, altrimenti riporto vet1 uguale
+        {
+            for (j=0; j<N; j++)          // sommo vet1 a ris partendo da ris[i+j] (come se shiftassi vet1)
+            {
                 res[i+j] = vet1[j] ^ res[i+j];
             }
         }
@@ -120,7 +134,8 @@ void normal_mul (__m128i *num1, __m128i *num2, __m256i *ris) {
 }
 
 
-__m256i clmul (__m128i val1, __m128i val2) {
+__m256i clmul (__m128i val1, __m128i val2)
+{
     __m256i ris = _mm256_set_epi32 (-1, -1, -1, -1, -1, -1, -1, -1);
     // scheletro m256 -> c1 : c0+c1+d1+e1 . d1+c0+d0+e0 : d0
     asm ("movdqa %[val1], %%xmm0\n\t"         // val1 in xmm0
@@ -146,7 +161,7 @@ __m256i clmul (__m128i val1, __m128i val2) {
          "vmovdqa %%ymm0, %[ris]\n\t"          //ret
          : [ris] "+rm" (ris)
          : [val1] "rm" (val1), [val2] "rm" (val2)
-         );
+        );
 
     return ris;
 }

@@ -1,4 +1,4 @@
-#include "Clmul.h"
+#include "A_Clmul.h"
 
 #include <math.h>
 #include <stdio.h>
@@ -9,8 +9,6 @@
 
 
 #define N 128
-
-
 
 // clmul fra num1 e num2, salvata in ris
 __m256i clmul (__m128i val1, __m128i val2);
@@ -68,14 +66,14 @@ void parse_vet_64 (uint64_t num, uint64_t vet[], uint32_t pos) {
 void print__m256 (__m256i num) {
     alignas(32) uint32_t v[8];
     _mm256_store_si256((__m256i*)v, num);
-    printf("__m256 : %08X %08X %08X %08X %08X %08X %08X %08x\n", v[7], v[6], v[5], v[4], v[3], v[2], v[1], v[0]);
+    printf("__m256 : %08X %08X %08X %08X %08X %08X %08X %08X\n", v[7], v[6], v[5], v[4], v[3], v[2], v[1], v[0]);
 }
 
 // stampa mm128i
 void print__m128 (__m128i num) {
     alignas(16) uint32_t v[4];
     _mm_store_si128((__m128i*)v, num);
-    printf("__m128 : %08X %08X %08X %08x\n", v[3], v[2], v[1], v[0]);
+    printf("__m128 : %08X %08X %08X %08X\n", v[3], v[2], v[1], v[0]);
 }
 
 // clmul fra num1 e num2, salvata in ris
@@ -151,7 +149,7 @@ __m256i clmul (__m128i val1, __m128i val2) {
     return ris;
 }
 
-void Array_Clmul(uint64_t Vett1[], uint64_t Vett2[], uint32_t n1, uint32_t n2,__m256i Res[], uint32_t n3) {
+void Array_Clmul(uint32_t n1, uint64_t Vett1[],  uint32_t n2, uint64_t Vett2[], uint32_t n3, __m256i Res[]) {
 
     __m256i ResTemp;
     int64_t i, j;
@@ -159,8 +157,6 @@ void Array_Clmul(uint64_t Vett1[], uint64_t Vett2[], uint32_t n1, uint32_t n2,__
 
     for(i = 0; i <  ((n1 + 1) >> 1) + ((n2 + 1) >> 1) - 1; i++){
        Res[i] = _mm256_set_epi64x ( (uint64_t)0, (uint64_t)0, (uint64_t)0, (uint64_t)0);
-        //Res[i] = _mm256_setzero_si256;                 //setzero F
-        //print__m256(Res[i]);
     }
 
     for(j = 0; j < (n2 >> 1); j++ ){        //Ciclo j n2/2 per difetto

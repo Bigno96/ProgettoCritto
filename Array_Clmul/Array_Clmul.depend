@@ -35,7 +35,8 @@
 	<stdalign.h>
 	<stdint.h>
 
-1523355697 source:/home/bigno/Uni/ProgettoCritto/Array_Clmul/main.c
+1523827066 source:/home/bigno/Uni/ProgettoCritto/Array_Clmul/main.c
+	"Clmul.h"
 	<math.h>
 	<stdio.h>
 	<immintrin.h>
@@ -43,7 +44,6 @@
 	<stdalign.h>
 	<stdint.h>
 	<inttypes.h>
-	"Clmul.h"
 
 1523305241 /home/bigno/Uni/ProgettoCritto/Array_Clmul/Clmul.h
 	<math.h>

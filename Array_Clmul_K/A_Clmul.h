@@ -24,6 +24,5 @@ void print__m128 (__m128i num);
 
 
 //Array_Clmul
-void Array_Clmul(uint64_t Vett1[], uint64_t Vett2[], uint32_t n1, uint32_t n2, __m256i Res[], uint32_t n3);
-//Add
+void Array_Clmul(uint32_t n1, uint64_t Vett1[],  uint32_t n2, uint64_t Vett2[], uint32_t n3, __m256i Res[]);
 #endif
