@@ -1,4 +1,4 @@
-#include "A_Clmul.h"
+#include "Clmul.h"
 
 #include <math.h>
 #include <stdio.h>
@@ -8,7 +8,7 @@
 #include <stdint.h>
 #include <inttypes.h>
 
-//void Array_Clmul(uint32_t n3, __m256i Res[], uint32_t n1, uint64_t Vett1[],  uint32_t n2, uint64_t Vett2[]);
+void Array_Clmul(uint32_t n3, __m256i Res[], uint32_t n1, uint64_t Vett1[],  uint32_t n2, uint64_t Vett2[]);
 
 #define N 255
 
@@ -17,7 +17,7 @@ int main(int argc, char *argv[])
     uint32_t n1, n2, n3;
     int64_t j;
     n1 = 1;
-    n2 = 2;
+    n2 = 1;
     n3 = ((n1 + 1) >> 1) + ((n2 + 1) >> 1) - 1;
 
     uint64_t Vett1[N], Vett2[N];
@@ -27,10 +27,6 @@ int main(int argc, char *argv[])
     Vett1[0] = (uint64_t)UINT64_MAX;
 
     Vett2[0] = (uint64_t)UINT64_MAX;
-    Vett2[1] = (uint64_t)0;
-
-    //Vett1[1] = (uint64_t)UINT64_MAX;
-    //Vett1[2] = (uint64_t)4;
 
     Array_Clmul(n3, Res, n1, Vett1, n2, Vett2);
 
@@ -43,7 +39,7 @@ int main(int argc, char *argv[])
     return 0;
 }
 
-/*void Array_Clmul(uint32_t n3, __m256i Res[], uint32_t n1, uint64_t Vett1[], uint32_t n2, uint64_t Vett2[])
+void Array_Clmul(uint32_t n3, __m256i Res[], uint32_t n1, uint64_t Vett1[], uint32_t n2, uint64_t Vett2[])
 {
     __m256i ResTemp;
     int64_t i, j;
@@ -99,4 +95,4 @@ int main(int argc, char *argv[])
         Res[((n1 + 1) >> 1) + ((n2 + 1) >> 1) -1] ^= ResTemp;
     }
 
-}*/
+}
