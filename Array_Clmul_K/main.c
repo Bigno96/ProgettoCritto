@@ -63,7 +63,7 @@ void Print_Vett256(uint32_t n, __m256i Vett[])
     uint32_t i;
     for (i = 0; i < n; i++)
     {
-        printf("[%u]", i);
+        printf("[%u] ", i);
         print__m256(Vett[i]);
     }
     printf("\n");
@@ -116,9 +116,9 @@ void ACK(uint32_t n3, uint64_t Res[], uint32_t n1, uint64_t Vett1[], uint32_t n2
     Array_Clmul(l, C, a, A0, b, B0);        //A0, B0 ottengo C1, C0
     Array_Clmul(l, D, a, A1, b, B1);        //A1, B1 ottengo D1, D0
     printf("Stamp C0 - C1\n");
-    Print_Vett64(l, C);
+    Print_Vett256(l, C);
     printf("Stamp D0 - D1\n");
-    Print_Vett64(l, D);
+    Print_Vett256(l, D);
 
  //   Array_Clmul(l, C, a, A0, b, B0);
 

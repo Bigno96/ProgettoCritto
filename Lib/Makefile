@@ -1,3 +1,5 @@
+default: A_Clmul.a
+
 A_Clmul.a: A_Clmul.o
 	ar r A_Clmul.a A_Clmul.o
 
