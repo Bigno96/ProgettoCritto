@@ -63,14 +63,14 @@ __m256i clmul (__m128i val1, __m128i val2) {
 void print__m256 (__m256i num) {
     alignas(32) uint32_t v[8];
     _mm256_store_si256((__m256i*)v, num);
-    printf("__m256 : %d %d %d %d %d %d %d %d\n", v[7], v[6], v[5], v[4], v[3], v[2], v[1], v[0]);
+    printf("__m256 : %d %d %d %d %d %d %d %d\n", v[0], v[1], v[2], v[3], v[4], v[5], v[6], v[7]);
 }
 
 // stampa mm128i
 void print__m128 (__m128i num) {
     alignas(16) uint32_t v[4];
     _mm_store_si128((__m128i*)v, num);
-    printf("__m128 : %d %d %d %d\n", v[3], v[2], v[1], v[0]);
+    printf("__m128 : %d %d %d %d\n", v[0], v[1], v[2], v[3]);
 }
 
 

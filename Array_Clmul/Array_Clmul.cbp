@@ -24,6 +24,7 @@
 			<Target title="Release">
 				<Option output="bin/Release/Array_Clmul" prefix_auto="1" extension_auto="1" />
 				<Option object_output="obj/Release/" />
+				<Option external_deps="../Lib/A_Clmul.a;" />
 				<Option type="1" />
 				<Option compiler="gcc" />
 				<Compiler>
@@ -31,6 +32,7 @@
 				</Compiler>
 				<Linker>
 					<Add option="-s" />
+					<Add library="../Lib/A_Clmul.a" />
 				</Linker>
 			</Target>
 		</Build>

@@ -1,5 +1,5 @@
-#ifndef _CLMUL_H_
-#define _CLMUL_H_
+#ifndef _A_CLMUL_H_
+#define _A_CLMUL_H_
 
 #include <math.h>
 #include <stdio.h>
