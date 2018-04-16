@@ -9,5 +9,10 @@ Clmul.a: Clmul.o
 
 Clmul.o: Clmul.c Clmul.h
 	gcc -Wall -pedantic -c -mavx Clmul.c
+ 
+Nmul.a: Nmul.o
+	ar r Nmul.a Nmul.o
 
+Nmul.o: Nmul.c Nmul.h
+	gcc -Wall -pedantic -c -mavx Nmul.c
 
