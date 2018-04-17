@@ -22,8 +22,8 @@ int main(int argc, char *argv[]) {
     __m128i num1, num2;
 
     //inizializzo i numeri
-    num1 = _mm_set_epi32(1,1,1,1);
-    num2 = _mm_set_epi32(1,1,1,1);
+    num1 = _mm_set_epi32(0,0,UINT32_MAX,UINT32_MAX);
+    num2 = _mm_set_epi32(0,0,0,1);
     ris = _mm256_set_epi64x(0,0,0,0);
 
     normal_mul(&num1, &num2, &ris);   // calcola risultato

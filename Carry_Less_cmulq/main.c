@@ -17,8 +17,8 @@ int main(int argc, char *argv[]) {
     __m128i num1, num2;
 
     //inizializzo i numeri
-    num1 = _mm_set_epi32(1,1,1,1);
-    num2 = _mm_set_epi32(0,1,0,0);
+    num1 = _mm_set_epi32(UINT32_MAX,UINT32_MAX,UINT32_MAX,UINT32_MAX);
+    num2 = _mm_set_epi32(0,0,0,1);
     ris = _mm256_set_epi64x(0,0,0,0);
 
     ris = clmul(num1, num2);
@@ -52,8 +52,8 @@ __m256i clmul (__m128i val1, __m128i val2) {
          "vinserti128 $0, %%xmm4, %%ymm0, %%ymm0\n\t"           //copio xmm4 in low di ymm0
          "vinserti128 $1, %%xmm5, %%ymm0, %%ymm0\n\t"           //copio xmm5 in high di ymm0
          "vmovdqa %%ymm0, %[ris]\n\t"          //ret
-         : [ris] "+rm" (ris)
-         : [val1] "rm" (val1), [val2] "rm" (val2)
+         : [ris] "=m" (ris)
+         : [val1] "m" (val1), [val2] "m" (val2)
          );
 
     return ris;
@@ -63,14 +63,14 @@ __m256i clmul (__m128i val1, __m128i val2) {
 void print__m256 (__m256i num) {
     alignas(32) uint32_t v[8];
     _mm256_store_si256((__m256i*)v, num);
-    printf("__m256 : %d %d %d %d %d %d %d %d\n", v[0], v[1], v[2], v[3], v[4], v[5], v[6], v[7]);
+    printf("__m256 : %08X %08X %08X %08X %08X %08X %08X %08X\n", v[7], v[6], v[5], v[4], v[3], v[2], v[1], v[0]);
 }
 
 // stampa mm128i
 void print__m128 (__m128i num) {
     alignas(16) uint32_t v[4];
     _mm_store_si128((__m128i*)v, num);
-    printf("__m128 : %d %d %d %d\n", v[0], v[1], v[2], v[3]);
+    printf("__m128 : %08X %08X %08X %08X\n", v[3], v[2], v[1], v[0]);
 }
 
 
