@@ -10,7 +10,7 @@
 // clmul fra num1 e num2, salvata in ris
 __m256i clmul (__m128i val1, __m128i val2);
 // clmul fra due Array, salvata in Res
-void Array_Clmul(uint32_t n3, __m256i Res[], uint32_t n1, uint64_t Vett1[],  uint32_t n2, uint64_t Vett2[]);
+void Array_Clmul(uint32_t n3, uint64_t Res[], uint32_t n1, uint64_t Vett1[],  uint32_t n2, uint64_t Vett2[]);
 // stampa m256i
 void print__m256 (__m256i num);
 // stampa m128i
@@ -63,52 +63,78 @@ __m256i clmul (__m128i val1, __m128i val2) {
 }
 
 // clmul fra due Array, salvata in Res
-void Array_Clmul(uint32_t n3, __m256i Res[], uint32_t n1, uint64_t Vett1[],  uint32_t n2, uint64_t Vett2[]) {
+void Array_Clmul(uint32_t n3, uint64_t Res[], uint32_t n1, uint64_t Vett1[],  uint32_t n2, uint64_t Vett2[]) {
 
-    __m256i ResTemp;
-    int64_t i, j;
-	__m128i V1, V2;
+    int64_t i=0, j=0;
+    int64_t lTmp = ((n1+1)>>1) + ((n2+1)>>1) -1;        //lunghezza (in 256) del vettore Res Temp, che raccoglie i risultati in uscita dai blocchi di clmul
+    int64_t l256 = (n3+3) >> 2;                         //lunghezza (in 256) del vettore che raccoglie le somme parziali degli elementi di Res Temp
+    __m256i ResTemp[lTmp], Res256[l256];
+    __m256i ZERO;                                       //elemento ZERO per realizzare lo shift con permute
+    __m128i V1, V2;                                     //128 bit da passare in ingresso a clmul
 
-    for(i = 0; i <  ((n1 + 1) >> 1) + ((n2 + 1) >> 1) - 1; i++){
-       Res[i] = _mm256_set_epi64x ( (uint64_t)0, (uint64_t)0, (uint64_t)0, (uint64_t)0);
+    ZERO = _mm256_set_epi64x ((uint64_t)0, (uint64_t)0, (uint64_t)0, (uint64_t)0);      // setto ZERO a zero
+
+    //inizializzo Res256 e ResTemp
+    for(i = 0; i < l256; i++)
+    {
+        Res256[i] = _mm256_set_epi64x ((uint64_t)0, (uint64_t)0, (uint64_t)0, (uint64_t)0);
+    }
+    for(i = 0; i < lTmp; i++)
+    {
+        ResTemp[i] = _mm256_set_epi64x ((uint64_t)0, (uint64_t)0, (uint64_t)0, (uint64_t)0);
     }
 
-    for(j = 0; j < (n2 >> 1); j++ ){        //Ciclo j n2/2 per difetto
-        V2 = _mm_set_epi64x ( Vett2[2*j + 1] , Vett2[2*j]);
+    for(j = 0; j < (n2 >> 1); j++)              //ciclo su Vett2, se pari lo finisco
+    {
+        V2 = _mm_set_epi64x (Vett2[2*j + 1], Vett2[2*j]);       //blocco la prima "coppia" di 64 di Vett2
 
-        for(i = 0; i < (n1 >> 1) ; i++ ){       //Ciclo i n1/2 per difetto
-            V1 = _mm_set_epi64x ( Vett1[2*i + 1] , Vett1[2*i]);
-            ResTemp = clmul( (__m128i)V1 ,(__m128i)V2);     //Clmul Temporanea
-            Res[j + i] ^= ResTemp;             //Xor con Res e Temp in Res
+        for(i = 0; i < (n1 >> 1) ; i++)                         //ciclo su Vett1, lo finisco se è pari
+        {
+            V1 = _mm_set_epi64x (Vett1[2*i + 1], Vett1[2*i]);   //moltiplico V2 per tutti i blocchi di Vett1
+            ResTemp[j+i] ^= clmul((__m128i)V1, (__m128i)V2);    //salvo in ResTemp
+        }
+
+        if(n1 % 2 == 1)                                         //se Vett1 dispari
+        {
+            V1 = _mm_set_epi64x (0, Vett1[n1-1]);               //metto l'ultimo blocco di Vett1 in v1, inserendo 0 nella parte "più significativa"
+            ResTemp[j+(n1>>1)] ^= clmul((__m128i)V1, (__m128i)V2);          //salvo in ResTemp l'ultima moltiplicazione
         }
     }
 
-    if( n1 % 2 == 1){        //n1 dispari
-            V1 = _mm_set_epi64x ( 0 , Vett1[n1 - 1]);
+    if(n2 % 2 == 1)                             //se Vett2 dispari
+    {
+        V2 = _mm_set_epi64x (0, Vett2[n2-1]);                   //blocco l'ultima coppia di Vett2
 
-            for(j = 0; j < (n2 >> 1); j++ ){
-                V2 = _mm_set_epi64x ( Vett2[2*j+1] , Vett2[2*j]);
-                ResTemp = clmul( (__m128i)V1 ,(__m128i)V2);
-                Res[ j + ((n1 + 1) >> 1) - 1] ^= ResTemp;
-                }
+        for(i = 0; i < (n1 >> 1) ; i++)                         //ciclo su Vett1, se pari lo finisco
+        {
+            V1 = _mm_set_epi64x (Vett1[2*i + 1], Vett1[2*i]);       //moltiplico V2 per tutti i blocchi di Vett1
+            ResTemp[(n2>>1)+i] ^= clmul((__m128i)V1, (__m128i)V2);  //salvo in ResTemp
+        }
+
+        if(n1 % 2 == 1)                                         //se Vett1 dispari
+        {
+            V1 = _mm_set_epi64x (0, Vett1[n1-1]);               //metto l'ultimo blocco di Vett1 in v1, inserendo 0 nella parte "più significativa"
+            ResTemp[lTmp-1] ^= clmul((__m128i)V1, (__m128i)V2);     //salvo in ResTemp l'ultima moltiplicazione
+        }
     }
 
-
-    if( n2 % 2 == 1){       //n2 dispari
-            V2 = _mm_set_epi64x ( 0 , Vett2[n2-1]);
-
-            for(i = 0; i < (n1 >> 1) ; i++ ){
-                V1 = _mm_set_epi64x ( Vett2[2*i+1] , Vett2[2*i]);
-                ResTemp = clmul( (__m128i)V1 ,(__m128i)V2);
-                Res[ i + ((n2 + 1) >> 1) - 1] ^= ResTemp;
-            }
+    Res256[0] = ResTemp[0] ^ _mm256_permute2x128_si256(ZERO, ResTemp[1], 33);       //shifta il 128 low di ResTemp[1] nel 128 high e fa l'or con ResTemp[0]
+    for (i = 1; i < l256 - 1; i++)                              //ciclo escludendo prima e ultima cifra di Res256, trattate prima e dopo
+    {
+        // res = i pari di resTemp  or  la parte high >> in low del resTemp precedente  or  la parte low >> high del resTemp successivo
+        Res256[i] = ResTemp[2*i] ^ _mm256_permute2x128_si256(ResTemp[2*i-1], ZERO, 33) ^ _mm256_permute2x128_si256(ZERO, ResTemp[2*i+1], 33);
     }
+    Res256[l256-1] = ResTemp[lTmp-1] ^ _mm256_permute2x128_si256(ResTemp[lTmp-2], ZERO, 33);       // shifta il 128 high di ResTemp finale nel 128 low e fa l'or con ResTemp finale
 
-    if( (n2 % 2 == 1) && (n1 % 2 == 1) ){      //n1 e n2 dispari
-            V1 = _mm_set_epi64x ( 0 , Vett1[n1-1]);
-            V2 = _mm_set_epi64x ( 0 , Vett2[n2-1]);
-            ResTemp = clmul( (__m128i)V1 ,(__m128i)V2);
-            Res[ ((n1 + 1) >> 1) + ((n2 + 1) >> 1) -1 ] ^= ResTemp;
+    alignas (32) uint64_t v[4];
+    //converto Res256 da elementi a 256 bit a elementi Digit 64 bit
+    for (j = 0; j < l256; j++)      // ciclo su Res256
+    {
+        _mm256_store_si256((__m256i*)v, Res256[j]);     //salvo in memoria Res256[j] e lo associo al vettore v
+  
+        for (i = 0; i < 4; i++)         //4 * 64 = 256
+        {
+            Res[(j*4)+i] = v[i];        //ogni elemento a 64bit di Res256[j] viene salvato in Res con l'offset adeguato
+        }
     }
-
 }

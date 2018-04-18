@@ -50,7 +50,7 @@ void Add(uint32_t n3, uint64_t Res[], uint32_t n1, uint64_t Vett1[], uint32_t n2
 void Print_Vett64(uint32_t n, uint64_t Vett[])
 {
     uint32_t i;
-    for (i = 0; i < n; i++)
+    for (i = n-1; i >= 0; i--)
     {
         printf("[%u] 0x%016lX\n", i, Vett[i]);
     }
@@ -61,7 +61,7 @@ void Print_Vett64(uint32_t n, uint64_t Vett[])
 void Print_Vett256(uint32_t n, __m256i Vett[])
 {
     uint32_t i;
-    for (i = 0; i < n; i++)
+    for (i = n-1; i >= 0; i--)
     {
         printf("[%u] ", i);
         print__m256(Vett[i]);
