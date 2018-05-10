@@ -12,12 +12,33 @@ void Array_Clmul(uint32_t n3, uint64_t Res[], uint32_t n1, uint64_t Vett1[],  ui
 
 #define N 255
 
+/*__m128i first128(__m256i Val256){
+
+    (m128i)result =
+        {
+            .lo=lo.
+            .mid=mid.
+            .hi = x + y -> hi + (mid >> 64)
+        };
+
+        return result;
+    /*asm("vmovdqa %[Val256], %%ymm0\n\t"
+        "vpsrldq $8, %%ymm0\n\t"
+        "vpermilps "
+
+
+
+        "movdqa %%ymm0, %[Val128]\n\t"
+        :[Val128] "=m" (Val128)
+  //      :[Val256] "m" (Val256)
+        );
+}
+*/
 int main(int argc, char *argv[])
 {
     uint32_t n1, n2, n3;
     n1 = 9;
-    n2 = 5
-         ;
+    n2 = 5;
     n3 = n1 + n2;
 
     uint64_t Vett1[N], Vett2[N];
@@ -38,7 +59,7 @@ int main(int argc, char *argv[])
     Vett2[1] = (uint64_t)0;
     Vett2[2] = (uint64_t)0;
     Vett2[3] = (uint64_t)0;
-    Vett2[4] = (uint64_t)1;
+    Vett2[4] = (uint64_t)UINT64_MAX;
 
     Array_Clmul(n3, Res, n1, Vett1, n2, Vett2);
 
@@ -108,6 +129,21 @@ void Array_Clmul(uint32_t n3, uint64_t Res[], uint32_t n1, uint64_t Vett1[], uin
         printf("\nResTemp: \n");
         print__m256(ResTemp[i]);
     }
+
+
+    double V3, V4;
+    V1 = _mm_set_epi64x (0,0);
+    V2 = _mm_set_epi64x (0,0);
+    __m256i Res1, Res2;
+    Res1 = ResTemp[0];
+    //_mm256_i32scatter_epi32(0, Res1 ,Res2, 2);
+    //  _mm256_storeu2_m128i(V3, V4, Res[0]);
+
+    printf("/npls");
+    //   print__m128(V1);
+    //   Res1 = _m256_bslli_epi128(Res1, 0)
+    print__m256(Res1);
+    print__m256(Res2);
 
     Res256[0] = ResTemp[0] ^ _mm256_permute2x128_si256(ZERO, ResTemp[1], 33);       //shifta il 128 low di ResTemp[1] nel 128 high e fa l'or con ResTemp[0]
     for (i = 1; i < l256 - 1; i++)                              //ciclo escludendo prima e ultima cifra di Res256, trattate prima e dopo

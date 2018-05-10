@@ -42,3 +42,13 @@
 	<stdalign.h>
 	<stdint.h>
 
+1525945877 source:/home/gio/Scrivania/Cript/Array_Clmul_K/main.c
+	"A_Clmul.h"
+	<math.h>
+	<stdio.h>
+	<emmintrin.h>
+	<immintrin.h>
+	<stdalign.h>
+	<stdint.h>
+	<inttypes.h>
+

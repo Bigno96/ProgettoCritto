@@ -137,4 +137,13 @@ void Array_Clmul(uint32_t n3, uint64_t Res[], uint32_t n1, uint64_t Vett1[],  ui
             Res[(j*4)+i] = v[i];        //ogni elemento a 64bit di Res256[j] viene salvato in Res con l'offset adeguato
         }
     }
+            //stampe test
+                
+                for (i = l256-1; i >= 0; i--)
+                {
+                    printf("[%u] 0x%016lX\n", i, Res[i]);
+                }
+                printf("\n");
+
 }
+
