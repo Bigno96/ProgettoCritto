@@ -141,6 +141,7 @@ void Array_Clmul(uint32_t n3, uint64_t Res[], uint32_t n1, uint64_t Vett1[],  ui
                 
                 for (i = l256-1; i >= 0; i--)
                 {
+                    printf("%d", l256);
                     printf("[%u] 0x%016lX\n", i, Res[i]);
                 }
                 printf("\n");

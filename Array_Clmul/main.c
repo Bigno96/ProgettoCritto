@@ -12,41 +12,19 @@ void Array_Clmul(uint32_t n3, uint64_t Res[], uint32_t n1, uint64_t Vett1[],  ui
 
 #define N 255
 
-/*__m128i first128(__m256i Val256){
-
-    (m128i)result =
-        {
-            .lo=lo.
-            .mid=mid.
-            .hi = x + y -> hi + (mid >> 64)
-        };
-
-        return result;
-    /*asm("vmovdqa %[Val256], %%ymm0\n\t"
-        "vpsrldq $8, %%ymm0\n\t"
-        "vpermilps "
-
-
-
-        "movdqa %%ymm0, %[Val128]\n\t"
-        :[Val128] "=m" (Val128)
-  //      :[Val256] "m" (Val256)
-        );
-}
-*/
 int main(int argc, char *argv[])
 {
     uint32_t n1, n2, n3;
-    n1 = 9;
-    n2 = 5;
+    n1 = 3;
+    n2 = 4;
     n3 = n1 + n2;
 
     uint64_t Vett1[N], Vett2[N];
     uint64_t Res[N];
 
-    Vett1[0] = (uint64_t)UINT64_MAX;
-    Vett1[1] = (uint64_t)UINT64_MAX;
-    Vett1[2] = (uint64_t)UINT64_MAX;
+    Vett1[0] = (uint64_t)0x0007BD386A994AFF;
+    Vett1[1] = (uint64_t)0;
+    Vett1[2] = (uint64_t)0;
     Vett1[3] = (uint64_t)UINT64_MAX;
     Vett1[4] = (uint64_t)UINT64_MAX;
     Vett1[5] = (uint64_t)UINT64_MAX;
@@ -55,7 +33,7 @@ int main(int argc, char *argv[])
     Vett1[8] = (uint64_t)UINT64_MAX;
 
 
-    Vett2[0] = (uint64_t)0;
+    Vett2[0] = (uint64_t)0x000713F550386645 ;
     Vett2[1] = (uint64_t)0;
     Vett2[2] = (uint64_t)0;
     Vett2[3] = (uint64_t)0;
@@ -73,8 +51,11 @@ void Array_Clmul(uint32_t n3, uint64_t Res[], uint32_t n1, uint64_t Vett1[], uin
     int64_t lTmp = ((n1+1)>>1) + ((n2+1)>>1) -1;        //lunghezza (in 256) del vettore Res Temp, che raccoglie i risultati in uscita dai blocchi di clmul
     int64_t l256 = (n3+3) >> 2;                         //lunghezza (in 256) del vettore che raccoglie le somme parziali degli elementi di Res Temp
     __m256i ResTemp[lTmp], Res256[l256];
+    int64_t lTemp64 = 4 * l256;
+    uint64_t ResTemp64[lTemp64];
     __m256i ZERO;                                       //elemento ZERO per realizzare lo shift con permute
     __m128i V1, V2;                                     //128 bit da passare in ingresso a clmul
+
 
     ZERO = _mm256_set_epi64x ((uint64_t)0, (uint64_t)0, (uint64_t)0, (uint64_t)0);      // setto ZERO a zero
 
@@ -86,6 +67,11 @@ void Array_Clmul(uint32_t n3, uint64_t Res[], uint32_t n1, uint64_t Vett1[], uin
     for(i = 0; i < lTmp; i++)
     {
         ResTemp[i] = _mm256_set_epi64x ((uint64_t)0, (uint64_t)0, (uint64_t)0, (uint64_t)0);
+    }
+
+     for(i = 0; i < n3; i++)
+    {
+        Res[i] = (uint64_t)0;
     }
 
     for(j = 0; j < (n2 >> 1); j++)              //ciclo su Vett2, se pari lo finisco
@@ -121,7 +107,7 @@ void Array_Clmul(uint32_t n3, uint64_t Res[], uint32_t n1, uint64_t Vett1[], uin
             ResTemp[lTmp-1] ^= clmul((__m128i)V1, (__m128i)V2);     //salvo in ResTemp l'ultima moltiplicazione
         }
     }
-
+//print test
     printf("lTmp = %ld\nl256 = %ld\n", lTmp, l256);
 
     for(i=0; i < lTmp; i++)
@@ -129,30 +115,75 @@ void Array_Clmul(uint32_t n3, uint64_t Res[], uint32_t n1, uint64_t Vett1[], uin
         printf("\nResTemp: \n");
         print__m256(ResTemp[i]);
     }
-
-
+//
+/*
     double V3, V4;
     V1 = _mm_set_epi64x (0,0);
     V2 = _mm_set_epi64x (0,0);
     __m256i Res1, Res2;
     Res1 = ResTemp[0];
-    //_mm256_i32scatter_epi32(0, Res1 ,Res2, 2);
-    //  _mm256_storeu2_m128i(V3, V4, Res[0]);
-
-    printf("/npls");
-    //   print__m128(V1);
-    //   Res1 = _m256_bslli_epi128(Res1, 0)
     print__m256(Res1);
     print__m256(Res2);
 
     Res256[0] = ResTemp[0] ^ _mm256_permute2x128_si256(ZERO, ResTemp[1], 33);       //shifta il 128 low di ResTemp[1] nel 128 high e fa l'or con ResTemp[0]
+    printf("Permute:");
+        print__m256(ResTemp[2*i+1]);
+    printf("\nPermute:");
+        print__m256(_mm256_permute2x128_si256(ZERO, ResTemp[2*i+1], 33));
+
     for (i = 1; i < l256 - 1; i++)                              //ciclo escludendo prima e ultima cifra di Res256, trattate prima e dopo
     {
         // res = i pari di resTemp  or  la parte high >> in low del resTemp precedente  or  la parte low >> high del resTemp successivo
         Res256[i] = ResTemp[2*i] ^ _mm256_permute2x128_si256(ResTemp[2*i-1], ZERO, 33) ^ _mm256_permute2x128_si256(ZERO, ResTemp[2*i+1], 33);
+        printf("Permute:");
+        print__m256(_mm256_permute2x128_si256(ZERO, ResTemp[2*i+1], 33));
     }
     Res256[l256-1] = ResTemp[lTmp-1] ^ _mm256_permute2x128_si256(ResTemp[lTmp-2], ZERO, 33);       // shifta il 128 high di ResTemp finale nel 128 low e fa l'or con ResTemp finale
+*/
+//ResTemp è lungo lTemp = la lunghezza dei 256 necessari per la clmul quindi se n1=2 e n2=3 lTemp=2 [(3+1)/2+(2+1)/2-1]
+//Il risultato n3 è invece in 64bit quindi 3+2 = 5
+//per fare ciò è necessario spezzare i ResTemp in uint64_t
+//e salvare gli uint64 in ResTemp64 e salvare solo i 64 utili in Res
+    /*alignas (32) uint64_t v0[4];
+            _mm256_store_si256((__m256i*)v0, ResTemp[0]);
+    for (j = 0; j < 4; j++) Res[j] = v0[j];*/
 
+    /*
+    for(i=1; i<lTmp; i +=2 ){    //spezzo i ResTemp da 256bit ottenuti con Clmul in 64bit
+        alignas (32) uint64_t v1[4];
+        _mm256_store_si256((__m256i*)v1, ResTemp[i]);
+        for (j = -2; j < 2; j++)         //4 * 64 = 256
+            //i ResRemp dispari iniziano 2 uint64_t prima del loro successivo e finiscono 2 uint64_t dopo
+            Res[((i-1)*4+j)] ^= v1[j];
+        alignas (32) uint64_t v0[4];
+        _mm256_store_si256((__m256i*)v0, ResTemp[i+1]);
+        for (j = 0; j < 4; j++)
+            //i ResTemp pari sono ordinati, ossia bisogna diminuire di 1 la loro i e poi quadruplicarla, come se i dispari non esistessero
+            Res[((i-1)*4)+j] ^= v0[j];        //ogni elemento a 64bit di Res256[j] viene salvato in Res con l'offset adeguato
+    }*/
+/*
+    for(i=0; i<(lTmp >> 1); i++ ){    //spezzo i ResTemp da 256bit ottenuti con Clmul in 64bit
+
+        alignas (32) uint64_t v1[4];
+        _mm256_store_si256((__m256i*)v1, ResTemp[2*i+1]);
+        for (j = -2; j < 2; j++)         //4 * 64 = 256
+            //i ResRemp dispari iniziano 2 uint64_t prima del loro successivo e finiscono 2 uint64_t dopo
+            Res[((2*i)*4+j)] ^= v1[j];
+
+        alignas (32) uint64_t v0[4];
+        _mm256_store_si256((__m256i*)v0, ResTemp[2*i+2]);
+        for (j = 0; j < 4; j++)
+           // i ResTemp pari sono ordinati, ossia bisogna diminuire di 1 la loro i e poi quadruplicarla, come se i dispari non esistessero
+            Res[((2*i-1)*4)+j] ^= v0[j];        //ogni elemento a 64bit di Res256[j] viene salvato in Res con l'offset adeguato
+    }
+
+    if(lTmp%2==0){
+    alignas (32) uint64_t v1[4];
+    _mm256_store_si256((__m256i*)v1, ResTemp[lTmp]);
+    for (j = 0; j < 4; j++) Res[(lTmp-1)*4+j] = v1[j];
+    }*/
+
+    /*
     alignas (32) uint64_t v[4];
     printf("\nRes256: \n");         //converto Res256 da elementi a 256 bit a elementi Digit 64 bit
     for (j = 0; j < l256; j++)      // ciclo su Res256
@@ -166,11 +197,40 @@ void Array_Clmul(uint32_t n3, uint64_t Res[], uint32_t n1, uint64_t Vett1[], uin
             printf("\n\n");
         }
     }
+    */
+
+
+    //Tentativo n' 15 sommo i pari (i * 4) e poi i dispari shiftati di (i-1)*4 + 2
+    alignas (32) uint64_t v[4];
+    for (j = 0; j < lTmp; j=j+2)      // ciclo su Res256
+    {
+        _mm256_store_si256((__m256i*)v, ResTemp[j]);     //salvo in memoria Res256[j] e lo associo al vettore v
+        print__m256(ResTemp[j]);
+        for (i = 0; i < 4; i++)         //4 * 64 = 256
+        {
+            Res[(j*4)+i] = v[i];        //ogni elemento a 64bit di Res256[j] viene salvato in Res con l'offset adeguato
+            printf("[%ld] 0x%016lX\n", i, v[i]);
+            printf("\n");
+        }
+    }
+    for (j = 1; j < lTmp; j=j+2)      // ciclo su Res256
+    {
+        _mm256_store_si256((__m256i*)v, ResTemp[j]);     //salvo in memoria Res256[j] e lo associo al vettore v
+        print__m256(ResTemp[j]);
+        for (i = 0; i < 4; i++)         //4 * 64 = 256
+        {
+            Res[((j-1)*4 + 2)+i] = v[i];        //ogni elemento a 64bit di Res256[j] viene salvato in Res con l'offset adeguato
+            printf("[%ld] 0x%016lX\n", i, v[i]);
+            printf("\n");
+        }
+    }
+
+
 
     for(i=n3-1; i >=0; i--)
     {
         printf("\nRes: \n");
-        printf("[%ld] 0x%016lX\n", i, Res[i]);
+        printf("[%ld] 0x%08lX\n", i, Res[i]);
     }
 
 }

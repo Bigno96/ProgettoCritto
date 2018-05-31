@@ -25,7 +25,7 @@ int main(int argc, char *argv[])
     Vett1[1] = UINT64_MAX;
 
     Vett2[0] = UINT64_MAX;
-    Vett2[1] = 0;
+    Vett2[1] = UINT64_MAX;
     Vett2[2] = UINT64_MAX;
 
     for (i = 0; i < n3; i++)
@@ -40,9 +40,10 @@ int main(int argc, char *argv[])
 
 void Add(uint32_t n3, uint64_t Res[], uint32_t n1, uint64_t Vett1[], uint32_t n2, uint64_t Vett2[])     //Add Vett1 e Vett2 in Res
 {
-    uint32_t i;
+    int32_t i;
     for(i = 0; i < n3; i++)
     {
+        printf("\nStamp i%d", i);
         Res[i] = Vett1[i] ^ Vett2[i];
     }
 
@@ -50,18 +51,20 @@ void Add(uint32_t n3, uint64_t Res[], uint32_t n1, uint64_t Vett1[], uint32_t n2
 
 void Print_Vett64(uint32_t n, uint64_t Vett[])
 {
-    uint32_t i;
+    int32_t i;
     for (i = n-1; i >= 0; i--)
     {
-        printf("[%u] 0x%016lX\n", i, Vett[i]);
+        printf("Stamp n = %d\n", n);
+        printf("Stamp i = %d\n", i);
+        printf("[%d] 0x%016lX\n", i, Vett[i]);
     }
-    printf("\n");
 
+    printf("\n");
 }
 
 void Print_Vett256(uint32_t n, __m256i Vett[])
 {
-    uint32_t i;
+    int32_t i;
     for (i = n-1; i >= 0; i--)
     {
         printf("[%u] ", i);
@@ -72,48 +75,68 @@ void Print_Vett256(uint32_t n, __m256i Vett[])
 
 void ACK(uint32_t n3, uint64_t Res[], uint32_t n1, uint64_t Vett1[], uint32_t n2, uint64_t Vett2[])     //moltiplicazione da dx a sx (0 -> n)
 {
-    int32_t a = (n1+1) >> 1;                                //lunghezza dei vettori A0 e A1
-    int32_t b = (n2+1) >> 1;                                //lunghezza dei vettori B0 e B1
+    int32_t a = (n1+1) >> 1;
+    printf("a = %d\n", a);                              //lunghezza dei vettori A0 e A1
+    int32_t b = (n2+1) >> 1;
+    printf("b = %d\n", b);                                  //lunghezza dei vettori B0 e B1
    // int32_t lc = a;
-   // int32_t ld = a;
+   // int32_t ld = b;
    // int32_t le = (a + b) >> 1;
-    uint32_t l = ((a + b)+1) >> 1;                          //lunghezza dei vettori risultato di Array_Clmul
+    uint32_t l = ((a + b)+1);                          //lunghezza dei vettori risultato di Array_Clmul
     int32_t i = 0;
     uint64_t A0[a], A1[a], B0[b], B1[b];    //A0 parte meno significativa, riempita con il bit medio. A1 parte più significativa, riempita con uno zero.
     uint64_t SumA[a], SumB[b];              //temporanei per gli xor A0 + A1, B0 + B1
-    uint64_t C[2l], D[2l], E[2l];             //temporanei per l'uscita da Array Clmul
-
+    uint64_t C[l], D[l], E[l];             //temporanei per l'uscita da Array Clmul
+    printf("l = %d\n", l);
 
     // A0 <= da Vett1[0] a Vett[n1/2] (se dispari n1+1)
 
-    for(i = 0; i < ((n1) >> 1); i++)          //riempio A0 e A1, ignorando il bit "in mezzo" se dispari
+   for(i = 0; i < ((n1) >> 1); i++)          //riempio A0 e A1, ignorando il bit "in mezzo" se dispari
     {
+        printf("i = %d\n", i);
         A0[i] = Vett1[i];
         A1[i] = Vett1[a+i];
     }
 
     if(n1 % 2 == (uint32_t)1)               //se n1 dispari
     {
+        printf("i = %d\n", i);
         A0[a-1] = Vett1[a-1];               //bit finale di A0
         A1[a-1] = (uint64_t) 0;             //bit finale di A1
     }
 
     for(i = 0; i < ((n2) >> 1); i++)          //riempio B0 e B1, ignorando il bit "in mezzo" se dispari
     {
+        printf("i = %d\n", i);
         B0[i] = Vett2[i];
         B1[i] = Vett2[b+i];
     }
 
     if(n2 % 2 == (uint32_t)1)               //se n2 dispari
     {
+        printf("i = %d\n", i);
         B0[b-1] = Vett2[b-1];               //bit finale di B0
         B1[b-1] = (uint64_t) 0;             //bit finale di B1
     }
 
+    printf("Stampa A0\n");
+    Print_Vett64(a,A0);
+
+    printf("Stampa A1\n");
+    Print_Vett64(a,A1);
+
+    printf("Stampa B0\n");
+    Print_Vett64(b,B0);
+
+    printf("Stampa B1\n");
+    Print_Vett64(b,B1);
+
     Array_Clmul(2l, C, a, A0, b, B0);        //A0 * B0 ottengo C1, C0
     Array_Clmul(2l, D, a, A1, b, B1);        //A1 * B1 ottengo D1, D0
+    printf("Stamp 2L = %d\n", 2*l);
+
     printf("Stamp C0 : C1\n");
-    Print_Vett64(2l,C);
+    Print_Vett64(l,C);
     printf("Stamp D0 : D1\n");
     Print_Vett64(l, D);
 
