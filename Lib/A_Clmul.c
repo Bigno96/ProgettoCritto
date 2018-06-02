@@ -117,7 +117,7 @@ void Array_Clmul(uint32_t n3, uint64_t Res[], uint32_t n1, uint64_t Vett1[],  ui
             ResTemp[lTmp-1] ^= clmul((__m128i)V1, (__m128i)V2);     //salvo in ResTemp l'ultima moltiplicazione
         }
     }
-
+/*
     Res256[0] = ResTemp[0] ^ _mm256_permute2x128_si256(ZERO, ResTemp[1], 33);       //shifta il 128 low di ResTemp[1] nel 128 high e fa l'or con ResTemp[0]
     for (i = 1; i < l256 - 1; i++)                              //ciclo escludendo prima e ultima cifra di Res256, trattate prima e dopo
     {
@@ -144,7 +144,27 @@ void Array_Clmul(uint32_t n3, uint64_t Res[], uint32_t n1, uint64_t Vett1[],  ui
                     printf("%d", l256);
                     printf("[%u] 0x%016lX\n", i, Res[i]);
                 }
-                printf("\n");
+                printf("\n");*/
+
+alignas (32) uint64_t v[4];
+    for (j = 0; j < lTmp; j=j+2)      // ciclo su Res256
+    {
+        _mm256_store_si256((__m256i*)v, ResTemp[j]);     //salvo in memoria Res256[j] e lo associo al vettore v
+        print__m256(ResTemp[j]);
+        for (i = 0; i < 4; i++)         //4 * 64 = 256
+        {
+            Res[(j*4)+i] = v[i];        //ogni elemento a 64bit di Res256[j] viene salvato in Res con l'offset adeguato
+        }
+    }
+    for (j = 1; j < lTmp; j=j+2)      // ciclo su Res256
+    {
+        _mm256_store_si256((__m256i*)v, ResTemp[j]);     //salvo in memoria Res256[j] e lo associo al vettore v
+        print__m256(ResTemp[j]);
+        for (i = 0; i < 4; i++)         //4 * 64 = 256
+        {
+            Res[((j-1)*4 + 2)+i] = v[i];        //ogni elemento a 64bit di Res256[j] viene salvato in Res con l'offset adeguato
+        }
+    }
 
 }
 
