@@ -21,9 +21,9 @@ int main(int argc, char *argv[])
     uint64_t Vett1[n1], Vett2[n2], Res[n3];
 
 
-    Vett1[0] = 0x0007BD386A994AFF;
+    Vett1[0] = 0x3FB5CA2AB169CF50;
 
-    Vett2[0] = 0x000713F550386645;
+    Vett2[0] = 0x1A076417B9BBB768;
 
 
     for (i = 0; i < n3; i++)
@@ -77,9 +77,6 @@ void ACK(uint32_t n3, uint64_t Res[], uint32_t n1, uint64_t Vett1[], uint32_t n2
     printf("a = %d\n", a);                              //lunghezza dei vettori A0 e A1
     int32_t b = (n2+1) >> 1;
     printf("b = %d\n", b);                                  //lunghezza dei vettori B0 e B1
-   // int32_t lc = a;
-   // int32_t ld = b;
-   // int32_t le = (a + b) >> 1;
     uint32_t l = a + b;                          //lunghezza dei vettori risultato di Array_Clmul
     int32_t i = 0;
     uint64_t A0[a], A1[a], B0[b], B1[b];    //A0 parte meno significativa, riempita con il bit medio. A1 parte più significativa, riempita con uno zero.
@@ -91,24 +88,18 @@ void ACK(uint32_t n3, uint64_t Res[], uint32_t n1, uint64_t Vett1[], uint32_t n2
 
    for(i = 0; i < ((n1) >> 1); i++)          //riempio A0 e A1, ignorando il bit "in mezzo" se dispari
     {
-        printf("i = %d\n Ciclo pari", i);
         A0[i] = Vett1[i];
-
         A1[i] = Vett1[a+i];
     }
 
     if(n1 % 2 == (uint32_t)1)               //se n1 dispari
     {
-        printf("i = %d\n Ciclo dispari", i);
         A0[a-1] = Vett1[a-1];               //bit finale di A0
-            printf("A[a-1] %d", Vett1[10]);
-                printf(" \n a + i %d", a+i );
         A1[a-1] = (uint64_t) 0;             //bit finale di A1
     }
 
     for(i = 0; i < ((n2) >> 1); i++)          //riempio B0 e B1, ignorando il bit "in mezzo" se dispari
     {
-        printf("i = %d\n", i);
         B0[i] = Vett2[i];
         B1[i] = Vett2[b+i];
     }
@@ -120,7 +111,7 @@ void ACK(uint32_t n3, uint64_t Res[], uint32_t n1, uint64_t Vett1[], uint32_t n2
         B1[b-1] = (uint64_t) 0;             //bit finale di B1
     }
 
-    printf("Stampa A0 no sense\n");
+    printf("Stampa A0\n");
     Print_Vett64(a,A0);
 
     printf("Stampa A1\n");
@@ -134,7 +125,6 @@ void ACK(uint32_t n3, uint64_t Res[], uint32_t n1, uint64_t Vett1[], uint32_t n2
 
     Array_Clmul(l, C, a, A0, b, B0);        //A0 * B0 ottengo C1, C0
     Array_Clmul(l, D, a, A1, b, B1);        //A1 * B1 ottengo D1, D0
-    printf("Stamp L = %d\n", l);
 
     printf("Stamp C0 : C1\n");
     Print_Vett64(l,C);
@@ -148,14 +138,19 @@ void ACK(uint32_t n3, uint64_t Res[], uint32_t n1, uint64_t Vett1[], uint32_t n2
     printf("Stamp E0 : E1\n");
     Print_Vett64(l, E);
 
-printf("res");
-    for(i = l; i < (n3 - l); i++) Res[i] ^= C[i];       //Somma A1 e A0 in Res
-    for(i = 2l; i < (n3); i++) Res[i] ^= C[i];
+    for(i = 0; i < l; i++){                 //Somma D1 e D0 in Res
+        Res[i] ^= C[i];
+        Res[i + ((l)>>1)] ^= C[i];
 
-    for(i = 0; i < (n3 - 2l); i++)  Res[i] ^= D[i];       //Somma B1 e B0 in Res
-    for(i = l; i < (n3 - l); i++) Res[i] ^= D[i];
+    }
+    for(i = 0; i < l; i++){         //Somma C1 e C0 in Res
+        Res[i + ((l)>>1)] ^= D[i];
+        Res[i + l] ^= D[i];
+    }
 
-    for(i = l; i < (n3 - l); i++) Res[i] ^= E[i];       //Somma E1 e E0 in Res
+    for(i = 0; i < l; i++)      //Somma E1 e E0 in Res
+        Res[i + ((l)>>1)] ^= E[i];
 
+    printf("res\n");
     Print_Vett64(n3, Res);
 }
