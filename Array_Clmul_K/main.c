@@ -138,12 +138,12 @@ void ACK(uint32_t n3, uint64_t Res[], uint32_t n1, uint64_t Vett1[], uint32_t n2
     printf("Stamp E0 : E1\n");
     Print_Vett64(l, E);
 
-    for(i = 0; i < l; i++){                 //Somma D1 e D0 in Res
+    for(i = 0; i < l; i++){                 //Somma C1 e C0 in Res
         Res[i] ^= C[i];
         Res[i + ((l)>>1)] ^= C[i];
 
     }
-    for(i = 0; i < l; i++){         //Somma C1 e C0 in Res
+    for(i = 0; i < l; i++){         //Somma D1 e D0 in Res
         Res[i + ((l)>>1)] ^= D[i];
         Res[i + l] ^= D[i];
     }
