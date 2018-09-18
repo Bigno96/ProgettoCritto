@@ -1,8 +1,6 @@
-LIB=-L/home/bigno/Uni/ProgettoCritto/Lib
-INC=-I/home/bigno/Uni/ProgettoCritto/Lib
+A_Clmul.a: A_Clmul.o
+	ar r A_Clmul.a A_Clmul.o
 
-default: main.o
-
-main.o: main.c 
-	gcc -Wall $(LIB) $(INC) -pedantic -c -mavx -mavx2 main.c 
-
+A_Clmul.o: A_Clmul.c A_Clmul.h
+	gcc -Wall -pedantic -c -mavx -mavx2 A_Clmul.c
+ 

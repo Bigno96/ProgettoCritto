@@ -52,3 +52,20 @@
 	<stdint.h>
 	<inttypes.h>
 
+1532524043 source:/home/bigno/Uni/ProgettoCritto_new/Array_Clmul_K/main.c
+	<string.h>
+	<stdio.h>
+	<emmintrin.h>
+	<immintrin.h>
+	<stdalign.h>
+	<stdint.h>
+	<inttypes.h>
+
+1531859926 /home/bigno/Uni/ProgettoCritto_new/Array_Clmul_K/A_Clmul.h
+	<math.h>
+	<stdio.h>
+	<emmintrin.h>
+	<immintrin.h>
+	<stdalign.h>
+	<stdint.h>
+
