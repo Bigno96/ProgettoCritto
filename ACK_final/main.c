@@ -5,7 +5,6 @@
 #include <stdalign.h>
 #include <stdint.h>
 #include <inttypes.h>
-#include <stdbool.h>
 
 #define DIGIT uint64_t
 
@@ -13,7 +12,7 @@
  * Prints m256i with >=c99 standard
  */
 void print_m256 (const __m256i num) {
-    DIGIT v[4] __attribute__((aligned(32)));
+    alignas(32) DIGIT v[4];
     _mm256_store_si256((__m256i*)v, num);
     printf("0x%016" PRIX64 " 0x%016" PRIX64 " 0x%016" PRIX64 " 0x%016" PRIX64 "\n", v[0], v[1], v[2], v[3]);
 }
@@ -22,7 +21,7 @@ void print_m256 (const __m256i num) {
  * Prints m128i with >=c99 standard
  */
 void print_m128 (const __m128i num) {
-    DIGIT v[2] __attribute__((aligned(32)));
+    alignas(32) DIGIT v[2];
     _mm_store_si128((__m128i*)v, num);
     printf("0x%016" PRIX64 " 0x%016" PRIX64 "\n", v[0], v[1]);
 }
@@ -70,6 +69,13 @@ __m256i clmul (const __m128i val1, const __m128i val2) {
 }
 
 /*
+ * Checks if number n is odd
+ */
+static inline int is_odd(const int n) {
+    return (n & 1) ? 1 : 0;
+}
+
+/*
  *  Clmul between two Arrays, returns result in Res
  */
 void array_clmul(const uint32_t nRes, DIGIT Res[],
@@ -77,66 +83,149 @@ void array_clmul(const uint32_t nRes, DIGIT Res[],
                  const uint32_t n2, const DIGIT Vect2[]) {
 
     int i, j, k;
-    bool vect1_even = true, vect2_even = true;
-    DIGIT clmul_64[4] __attribute__((aligned(32)));
+    __m256i clmul_res;
 
     __m128i V1, V2;         // 128 bits tmps to pass as input of Clmul 
 
     // initializing Res
     memset(Res, 0x00, nRes*sizeof(DIGIT));
      
-    // setting bool for checking even
-    if (n1 & 1)
-        vect1_even = false;
-    if (n2 & 1)
-        vect2_even = false;
-
     for(j = n2-2; j >= 0; j -= 2) {                             // ciclying on Vect2, finishes all it if even
 	V2 = _mm_set_epi64x(Vect2[j], Vect2[j+1]);		// sets first "couple" of 64's in Vect2 
 
         for(i = n1-2; i >= 0; i -= 2) {                         // ciclying on Vect1, finishes all it if even
             V1 = _mm_set_epi64x(Vect1[i], Vect1[i+1]);		// multiplying V2 to every blocks of Vect1 
             
-            _mm256_store_si256((__m256i*)clmul_64, clmul(V1, V2));	// setting clmul result to 2 __m128i
-            // saving to Res
-            for (k = 3; k >= 0; k--)
-                Res[j+i+k] ^= clmul_64[3-k];                   
+            clmul_res = clmul(V1, V2);
+            Res[j+i+3] ^= (DIGIT) _mm256_extract_epi64(clmul_res, 0);
+            Res[j+i+2] ^= (DIGIT) _mm256_extract_epi64(clmul_res, 1);
+            Res[j+i+1] ^= (DIGIT) _mm256_extract_epi64(clmul_res, 2);
+            Res[j+i+0] ^= (DIGIT) _mm256_extract_epi64(clmul_res, 3);                 
         }
 	
 	// if Vect1 is odd
-        if(!vect1_even) {
+        if(is_odd(n1)) {
             V1 = _mm_set_epi64x(0, Vect1[0]);			// sets last block of Vect1 padding with zero on the upper half of V1 
 	    
-	    _mm256_store_si256((__m256i*)clmul_64, clmul(V1, V2));	// setting clmul result to 2 __m128i	
-            // saving to Res
-            for (k = 2; k >= 0; k--)
-                Res[j+k] ^= clmul_64[2-k];                        
+            clmul_res = clmul(V1, V2);
+            Res[j+2] ^= (DIGIT) _mm256_extract_epi64(clmul_res, 0);
+            Res[j+1] ^= (DIGIT) _mm256_extract_epi64(clmul_res, 1);
+            Res[j+0] ^= (DIGIT) _mm256_extract_epi64(clmul_res, 2);                      
         }
     }
     
     // if Vect2 is odd
-    if(!vect2_even) {
+    if(is_odd(n2)) {
         V2 = _mm_set_epi64x(0, Vect2[0]);                   // loads last Vect2's couple, padded with zero on the upper half
 
         for(i = n1-2; i >= 0; i -= 2) {				// ciclying on Vect1, finishes all it if even
             V1 = _mm_set_epi64x(Vect1[i], Vect1[i+1]);		// multiplying V2 to every blocks of Vect1  
 	    
-	    _mm256_store_si256((__m256i*)clmul_64, clmul(V1, V2));	// setting clmul result to 2 __m128i
-            // saving to Res
-            for (k = 2; k >= 0; k--)
-                Res[i+k] ^= clmul_64[2-k];   
+            clmul_res = clmul(V1, V2);
+            Res[i+2] ^= (DIGIT) _mm256_extract_epi64(clmul_res, 0);
+            Res[i+1] ^= (DIGIT) _mm256_extract_epi64(clmul_res, 1);
+            Res[i+0] ^= (DIGIT) _mm256_extract_epi64(clmul_res, 2); 
         }
 
 	// if Vect1 is odd
-        if(!vect1_even) {
+        if(is_odd(n1)) {
             V1 = _mm_set_epi64x(0, Vect1[0]);			// sets last block of Vect1 padding with zero on the upper half of V1 
 	    
-	    _mm256_store_si256((__m256i*)clmul_64, clmul(V1, V2));	// setting clmul result to 2 __m128i
-            // saving to Res
-            for (k = 1; k >= 0; k--)
-                Res[k] ^= clmul_64[1-k];   
+            clmul_res = clmul(V1, V2);
+            Res[1] ^= (DIGIT) _mm256_extract_epi64(clmul_res, 0);
+            Res[0] ^= (DIGIT) _mm256_extract_epi64(clmul_res, 1);  
         }
     }
+}
+
+/*
+ * Add carry less vect1 to vect2, saves result in Res
+ * Behavior is undefined if Vect1 and Vect2 are not same length 
+ */
+void add(const uint32_t nRes, DIGIT Res[], const DIGIT Vect1[], const DIGIT Vect2[]) {     
+       
+    int i;
+    for(i = 0; i < nRes; ++i)
+        Res[i] = Vect1[i] ^ Vect2[i];
+}
+
+/*
+ * Carry less multiplication between two arrays, reduction time with Karatsuba's algorithm
+ * Result sets in Res
+ */
+void ACK(const uint32_t nRes, DIGIT Res[], 
+         const uint32_t n1, DIGIT Vect1[], 
+         const uint32_t n2, DIGIT Vect2[]) {   
+    
+    const int lA = (n1+1) >> 1;         // length of A0 and A1 vectors
+    const int lB = (n2+1) >> 1;         // length of B0 and B1 vectors
+    const int lR = lA + lB;             // length of Array Clmul's results
+    
+    int i;
+    
+    // A1 : A0 -> A1 low half of Vect1 (high Bits), A0 high half of Vect1 (low Bits)
+    // B1 : B0 -> B1 low half of Vect2 (high Bits), B0 high half of Vect2 (low Bits)
+    DIGIT A0[lA], A1[lA], B0[lB], B1[lB];  
+    DIGIT sumA[lA], sumB[lB];  
+    DIGIT C[lR], D[lR], E[lR];
+
+    memset(Res, 0x00, nRes*sizeof(DIGIT));
+    
+    if (is_odd(n1)) {      
+        
+        for(i = 0; i < lA-1; ++i) {            // filling A0 and A1, ignoring middle bit 
+            A1[i+1] = Vect1[i];
+            A0[i] = Vect1[lA-1+i];
+        }      
+        // filling middle bit 
+        A1[0] = (DIGIT)0x00;                // A1 is padded left with zeros
+        A0[lA-1] = Vect1[n1-1];       
+    }
+    else 
+        for(i = 0; i < lA; ++i) {            // filling A0 and A1
+            A1[i] = Vect1[i];
+            A0[i] = Vect1[lA+i];
+        }
+    
+    if (is_odd(n2)) {      
+        
+        for(i = 0; i < lB-1; ++i) {            // filling B0 and B1, ignoring middle bit 
+            B1[i+1] = Vect2[i];
+            B0[i] = Vect2[lB-1+i];
+        }      
+        // filling middle bit 
+        B1[0] = (DIGIT)0x00;                // B1 is padded left with zeros
+        B0[lB-1] = Vect2[n2-1];       
+    }
+    else 
+        for(i = 0; i < lB; ++i) {            // filling B0 and B1
+            B1[i] = Vect2[i];
+            B0[i] = Vect2[lB+i];
+        }
+    
+    /*
+    array_clmul(l, C, a, A1, b, B1);        //A1 * B1 ottengo c1, c0
+    array_clmul(l, D, a, A0, b, B0);        //A0 * B0 ottengo d1, d0
+
+    add(a, SumA, a, A0, a, A1);             //A0 + A1
+    add(b, SumB, b, B0, b, B1);             //B0 + B1
+
+    array_clmul(l, E, a, SumA, b, SumB);    //(A0 + A1) * (B0 + B1)
+
+    // ricostruisce il vettore finale con karatsuba
+    for (i = 0, j = l-1; i < l; i++, j--) {
+        Res[i] ^= C[j];
+        Res[i + (l>>1)] ^= D[j] ^ C[j] ^ E[j];
+        Res[i + (n1 >> 1) + (n2 >> 1)] ^= D[j];
+    }
+
+    /*if (n1 % 2 == 1) {
+        for (i = 0; i < n3-3; i++)
+            Res[i] = Res[i+2];
+
+        Res[n3-2] = (DIGIT) 0;
+        Res[n3-1] = (DIGIT) 0;
+    }*/
 }
 
 #define DIGIT_SIZE 64
@@ -181,7 +270,7 @@ void gf2x_mul_comb(const int nr, DIGIT Res[],
 
 #define MAX32 UINT32_MAX
 #define MAX64 UINT64_MAX
-#define N1 7
+#define N1 8
 #define N2 7
 #define NRES N1+N2
 
@@ -193,12 +282,12 @@ int main(int argc, char** argv) {
     int i;
     
     // order of memset is 3, 2, 1, 0 
-    __m128i test128 = _mm_set_epi64x(0xC, 0x2);        // LB of number in position 3, HB in position 0 -> e.g., number 2003 need to be set as 3, 0, 0, 2
-    __m256i test256 = _mm256_set_epi64x(MAX64, MAX64, MAX64, 0);
+    //__m128i test128 = _mm_set_epi64x(0xC, 0x2);        // LB of number in position 3, HB in position 0 -> e.g., number 2003 need to be set as 3, 0, 0, 2
+    //__m256i test256 = _mm256_set_epi64x(MAX64, MAX64, MAX64, 0);
     
     DIGIT res_gf2x[NRES];
     DIGIT res_pcmul[NRES];
-    DIGIT num1[N1] = {(DIGIT)MAX64, (DIGIT)0xC1, (DIGIT)0x176, (DIGIT)0xFCD21, (DIGIT)MAX64, (DIGIT)0x1897, (DIGIT)0x31243A};//, (DIGIT)0xFC432A};
+    DIGIT num1[N1] = {(DIGIT)MAX64, (DIGIT)0xC1, (DIGIT)0x176, (DIGIT)0xFCD21, (DIGIT)MAX64, (DIGIT)0x1897, (DIGIT)0x31243A, (DIGIT)0xFC432A};
     DIGIT num2[N2] = {(DIGIT)MAX64, (DIGIT)0x2A3F, (DIGIT)MAX64, (DIGIT)0xAA, (DIGIT)0x2FF45, (DIGIT)0x3, (DIGIT)MAX32};//, (DIGIT)0x154A};
     
     gf2x_mul_comb(NRES, res_gf2x, N1, num1, N2, num2);
