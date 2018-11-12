@@ -1,5 +1,5 @@
-#ifndef ACLMULK_H
-#define ACLMULK_H
+#ifndef ACK_H
+#define ACK_H
 
 #include <inttypes.h>
 #define DIGIT uint64_t

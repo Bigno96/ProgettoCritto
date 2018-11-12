@@ -6,7 +6,7 @@
 #include <stdint.h>
 #include <inttypes.h>
 
-#include "aclmulk.h"
+#include "ack.h"
 
 #define DIGIT uint64_t
 
@@ -29,45 +29,29 @@ void print_m128 (const __m128i num) {
 }
 
 /*
- *  Returns clmul between num1 and num2
+ *  Returns clmul between val1 and val2
  */ 
 __m256i clmul (const __m128i val1, const __m128i val2) {
-    __m256i ris = _mm256_setzero_si256();
+    
+    __m256i res;
+    __m128i C, D, E, xor;
+    
     // skeleton m256 -> c1 : c0+c1+d1+e1 . d1+c0+d0+e0 : d0
-    asm ("movdqu %[val1], %%xmm0\n\t"                           // val1 in xmm0
-         "movdqu %[val2], %%xmm1\n\t"                           // val2 in xmm1
+    C = _mm_clmulepi64_si128(val1, val2, 0x00);                 // a1 * b1 to C, c1:c0 
+    D = _mm_clmulepi64_si128(val1, val2, 0x11);                 // a0 * b0 to D, d1:d0
     
-         "movdqa %%xmm0, %%xmm2\n\t"                            // val1 copied to xmm2
-         "pclmulqdq $0x11, %%xmm1, %%xmm2\n\t"                  // a1 * b1 in xmm2, c1:c0   
-         "movdqa %%xmm0, %%xmm3\n\t"                            // val1 copied to xmm3    
-         "pclmulqdq $0x00, %%xmm1, %%xmm3\n\t"                  // a0 * b0 in xmm3, d1:d0 
-    
-         "vpsrldq $8, %%xmm0, %%xmm4\n\t"                       // xmm4 contains a1 in low half
-         "pxor %%xmm0, %%xmm4\n\t"                              // a1 xor a0 to xmm4 (low half)
-         "vpsrldq $8, %%xmm1, %%xmm5\n\t"                       // xmm5 contains b1 in low half
-         "pxor %%xmm1, %%xmm5\n\t"                              // b1 xor b0 to xmm5 (low half)
-    
-         "pclmulqdq $0x00, %%xmm5, %%xmm4\n\t"                  // xmm4 contains (a0 xor a1) * (b0 xor b1), e1:e0
-    
-         "pxor %%xmm3, %%xmm4\n\t"                              // in xmm4 there's d1 xor e1 : d0 xor e0
-         "pxor %%xmm2, %%xmm4\n\t"                              // in xmm4 there's c1 xor d1 xor e1 : c0 xor d0 xor e0
-    
-         "vpsrldq $8, %%xmm4, %%xmm5\n\t"                       // shifts to low half of xmm5 the high half of xmm4
-         "pxor %%xmm2, %%xmm5\n\t"                              // xmm5 contains c1 : c0+c1+d1+e1
-    
-         "pslldq $8, %%xmm4\n\t"                                // shifts to high half of xmm4 the low half of xmm4
-         "pxor %%xmm3, %%xmm4\n\t"                              // xmm4 contains d1+c0+d0+e0 : d0
-         
-        // xmm5 : xmm4 are the clmul results
-         "vinserti128 $0, %%xmm4, %%ymm0, %%ymm0\n\t"           // copies xmm4 to low half of ymm0
-         "vinserti128 $1, %%xmm5, %%ymm0, %%ymm0\n\t"           // copies xmm5 to high half of ymm0
-         "vmovdqa %%ymm0, %[ris]\n\t"                           //ret
-    
-         : [ris] "=m" (ris)
-         : [val1] "m" (val1), [val2] "m" (val2)
-         );
+    // E contains (a0 xor a1) * (b0 xor b1), e1:e0
+    E = _mm_clmulepi64_si128(_mm_xor_si128(_mm_srli_si128(val1, 0x8), val1),    // (a0 xor a1)
+                             _mm_xor_si128(_mm_srli_si128(val2, 0x8), val2),    // (b0 xor b1)
+                             0x00);  
+  
+    // xor contains c1+d1+e1 : c0+d0+e0
+    xor = _mm_xor_si128(_mm_xor_si128(C, D), E);
+  
+    res = _mm256_inserti128_si256(res, _mm_xor_si128(C, _mm_srli_si128(xor, 0x8)), 0x1);
+    res = _mm256_inserti128_si256(res, _mm_xor_si128(D, _mm_slli_si128(xor, 0x8)), 0x0);
 
-    return ris;
+    return res;
 }
 
 /*
@@ -89,10 +73,10 @@ void array_clmul(const uint32_t nRes, DIGIT Res[],
     
     if (n & 1) {                    // if both are odd                                                   
         for(j = n-2; j >= 0; j -= 2) {                              // ciclying on Vect2, leaves last block
-            V2 = _mm_set_epi64x(Vect2[j], Vect2[j+1]);              // sets first "couple" of 64's in Vect2 
+            V2 = _mm_set_epi64x(Vect2[j+1], Vect2[j]);              // sets first "couple" of 64's in Vect2 
 
             for(i = n-2; i >= 0; i -= 2) {                          // ciclying on Vect1, leaves last block
-                V1 = _mm_set_epi64x(Vect1[i], Vect1[i+1]);          // multiplying V2 to every blocks of Vect1 
+                V1 = _mm_set_epi64x(Vect1[i+1], Vect1[i]);          // multiplying V2 to every blocks of Vect1 
 
                 clmul_res = clmul(V1, V2);
                 Res[j+i+3] ^= (DIGIT) _mm256_extract_epi64(clmul_res, 0);
@@ -101,7 +85,7 @@ void array_clmul(const uint32_t nRes, DIGIT Res[],
                 Res[j+i+0] ^= (DIGIT) _mm256_extract_epi64(clmul_res, 3);                 
             }
 
-            V1 = _mm_set_epi64x(0, Vect1[0]);			// sets last block of Vect1 padding with zero on the upper half of V1 
+            V1 = _mm_set_epi64x(Vect1[0], 0);			// sets last block of Vect1 padding with zero on the upper half of V1 
 
             clmul_res = clmul(V1, V2);
             Res[j+2] ^= (DIGIT) _mm256_extract_epi64(clmul_res, 0);
@@ -109,10 +93,10 @@ void array_clmul(const uint32_t nRes, DIGIT Res[],
             Res[j+0] ^= (DIGIT) _mm256_extract_epi64(clmul_res, 2);                      
         }
         
-        V2 = _mm_set_epi64x(0, Vect2[0]);                       // loads last Vect2's couple, padded with zero on the upper half
+        V2 = _mm_set_epi64x(Vect2[0], 0);                       // loads last Vect2's couple, padded with zero on the upper half
 
         for(i = n-2; i >= 0; i -= 2) {				// ciclying on Vect1, leaves last block
-            V1 = _mm_set_epi64x(Vect1[i], Vect1[i+1]);		// multiplying V2 to every blocks of Vect1  
+            V1 = _mm_set_epi64x(Vect1[i+1], Vect1[i]);		// multiplying V2 to every blocks of Vect1  
 	    
             clmul_res = clmul(V1, V2);
             Res[i+2] ^= (DIGIT) _mm256_extract_epi64(clmul_res, 0);
@@ -120,7 +104,7 @@ void array_clmul(const uint32_t nRes, DIGIT Res[],
             Res[i+0] ^= (DIGIT) _mm256_extract_epi64(clmul_res, 2); 
         }
 
-        V1 = _mm_set_epi64x(0, Vect1[0]);			// sets last block of Vect1 padding with zero on the upper half of V1 
+        V1 = _mm_set_epi64x(Vect1[0], 0);			// sets last block of Vect1 padding with zero on the upper half of V1 
 
         clmul_res = clmul(V1, V2);
         Res[1] ^= (DIGIT) _mm256_extract_epi64(clmul_res, 0);
@@ -128,10 +112,10 @@ void array_clmul(const uint32_t nRes, DIGIT Res[],
     }
     else                                    // if both are even
         for(j = n-2; j >= 0; j -= 2) {                              // ciclying on Vect2
-            V2 = _mm_set_epi64x(Vect2[j], Vect2[j+1]);              // sets first "couple" of 64's in Vect2 
+            V2 = _mm_set_epi64x(Vect2[j+1], Vect2[j]);              // sets first "couple" of 64's in Vect2 
 
             for(i = n-2; i >= 0; i -= 2) {                          // ciclying on Vect1
-                V1 = _mm_set_epi64x(Vect1[i], Vect1[i+1]);          // multiplying V2 to every blocks of Vect1 
+                V1 = _mm_set_epi64x(Vect1[i+1], Vect1[i]);          // multiplying V2 to every blocks of Vect1 
 
                 clmul_res = clmul(V1, V2);
                 Res[j+i+3] ^= (DIGIT) _mm256_extract_epi64(clmul_res, 0);

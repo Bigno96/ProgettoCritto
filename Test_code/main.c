@@ -2,7 +2,8 @@
 #include <stdlib.h>
 #include <string.h>
 #include <inttypes.h>
-#include "aclmulk.h"
+
+#include "ack.h"
 
 #define DIGIT uint64_t
 #define DIGIT_SIZE 64
@@ -60,8 +61,8 @@ int main(int argc, char** argv) {
        
     DIGIT res_gf2x[NRES];
     DIGIT res_ack[NRES];
-    DIGIT num1[N1] = {(DIGIT)0x11, (DIGIT)0x1343, (DIGIT)0x12, (DIGIT)0x9, (DIGIT)0x876, (DIGIT)0x1, (DIGIT)0xA134F, (DIGIT)0x4131A1A};
-    DIGIT num2[N2] = {(DIGIT)0xAF32, (DIGIT)0xA, (DIGIT)0xAAAA, (DIGIT)0x1A2A, (DIGIT)0x2039AAF, (DIGIT)MAX32, (DIGIT)0x6AAAF, (DIGIT)0x5A12};
+    DIGIT num1[N1] = {(DIGIT)MAX64, (DIGIT)0x35FDFD, (DIGIT)0x2111E, (DIGIT)0xBAC1, (DIGIT)0x8, (DIGIT)0x63A1, (DIGIT)0xAAA3A3, (DIGIT)0x4};
+    DIGIT num2[N2] = {(DIGIT)0xAAA2, (DIGIT)0xB, (DIGIT)0xCCC, (DIGIT)MAX32, (DIGIT)MAX64, (DIGIT)0x522112, (DIGIT)0x659252342, (DIGIT)0x8};
     
     gf2x_mul_comb(NRES, res_gf2x, N1, num1, N2, num2);
        

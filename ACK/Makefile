@@ -1,9 +1,10 @@
-CC=gcc
-C=main.c
-O=main.o
-CFLAGS= -mavx -mavx2 -std=gnu11 -I -O2.
+CC = gcc
+CFLAGS = -mavx -mavx2 -mpclmul -O2 
+SRC = ack.c
+OBJ = ack.o
 
-make: $(C)
-	$(CC) $(CFLAGS) -c $(C)
-	ar rs ack.a $(O)
+ack: $(OBJ) $(SRC)
+	$(CC) -c $(SRC) $(CFLAGS)
+	ar rcs ack.a $(OBJ)
+	
 
