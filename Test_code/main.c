@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <time.h>
 #include <inttypes.h>
 
 #include "ack.h"
@@ -48,33 +49,67 @@ void gf2x_mul_comb(const int nr, DIGIT Res[],
 
 #define MAX32 UINT32_MAX
 #define MAX64 UINT64_MAX
-#define N1 8
-#define N2 8
+#define N1 127
+#define N2 127
 #define NRES N1+N2
+#define N_TEST 100
+#define MN_DIGIT 0x7F                   //Max Number of N1,N2
 
 /*
  * For testing purposes
  */
 int main(int argc, char** argv) {
-    
-    int i;
-       
+    DIGIT num1[N1];
+    DIGIT num2[N2];
     DIGIT res_gf2x[NRES];
     DIGIT res_ack[NRES];
-    DIGIT num1[N1] = {(DIGIT)MAX64, (DIGIT)0x35FDFD, (DIGIT)0x2111E, (DIGIT)0xBAC1, (DIGIT)0x8, (DIGIT)0x63A1, (DIGIT)0xAAA3A3, (DIGIT)0x4};
-    DIGIT num2[N2] = {(DIGIT)0xAAA2, (DIGIT)0xB, (DIGIT)0xCCC, (DIGIT)MAX32, (DIGIT)MAX64, (DIGIT)0x522112, (DIGIT)0x659252342, (DIGIT)0x8};
+
+    int nTest,i,j;
+    DIGIT randDigit;
+    int randN1;
+    int randN2;
+    int randNRes;
+    srand(time(NULL));
     
-    gf2x_mul_comb(NRES, res_gf2x, N1, num1, N2, num2);
-       
-    ACK(NRES, res_ack, N1, num1, N2, num2);
-    
-    printf("\nPrint scholastic clmul:\n");
-    for (i = 0; i < NRES; ++i)
-        printf("0x%016" PRIX64 " ", res_gf2x[i]);
-   
-    printf("\nPrint ack:\n");
-    for (i = 0; i < NRES; ++i)
-        printf("0x%016" PRIX64 " ", res_ack[i]);
-            
+    for(nTest=0; nTest<N_TEST; nTest++){
+        randN1=rand()&MN_DIGIT;
+        randN2&=rand()&MN_DIGIT;
+        randNRes=randN1+randN2;
+        
+        for(i=0; i<randN1; i++){
+            for(j=0; j<sizeof(DIGIT)/2;j++){
+                randDigit=0;
+                randDigit|=(DIGIT)rand()&(DIGIT)0xFFFF;
+                randDigit=randDigit<<16;
+            }
+            num1[i]=randDigit;
+        }
+
+        for(i=0; i<randN2; i++){
+            for(j=0; j<sizeof(DIGIT)/2;j++){
+                randDigit=0;
+                randDigit|=(DIGIT)rand()&(DIGIT)0xFFFF;
+                randDigit=randDigit<<16;
+            }
+            num2[i]=randDigit;
+        }
+        
+        gf2x_mul_comb(randNRes, res_gf2x, randN1, num1, randN2, num2);
+        
+        ACK(randNRes, res_ack, randN1, num1, randN2, num2);
+
+        for (i = 0; i < randNRes; i++){
+            if((res_gf2x[i]^res_ack[i])){
+                printf("Confrontation error");
+                printf("\nPrint scholastic clmul:\n");
+                for (i = 0; i < randNRes; ++i)
+                    printf("0x%016" PRIX64 " ", res_gf2x[i]);
+               
+                printf("\nPrint ack:\n");
+                for (i = 0; i < randNRes; ++i)
+                    printf("0x%016" PRIX64 " ", res_ack[i]);        
+            }
+        }
+    }
     return (EXIT_SUCCESS);
 }
