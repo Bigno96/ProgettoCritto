@@ -77,7 +77,7 @@ int main(int argc, char** argv) {
             randN1 = rand() & MN_DIGIT;
         
         randN2 = rand() & MN_DIGIT;
-        while (randN2)
+        while (!randN2)
             randN2 = rand() & MN_DIGIT;
         
         randNRes = randN1 + randN2;
