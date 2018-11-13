@@ -51,65 +51,81 @@ void gf2x_mul_comb(const int nr, DIGIT Res[],
 #define MAX64 UINT64_MAX
 #define N1 127
 #define N2 127
-#define NRES N1+N2
+#define NRES N1 + N2
 #define N_TEST 100
-#define MN_DIGIT 0x7F                   //Max Number of N1,N2
-
+#define MN_DIGIT 0x7F          
 /*
  * For testing purposes
  */
 int main(int argc, char** argv) {
+    
     DIGIT num1[N1];
     DIGIT num2[N2];
     DIGIT res_gf2x[NRES];
     DIGIT res_ack[NRES];
 
-    int nTest,i,j;
+    int nTest, i, j;
     DIGIT randDigit;
-    int randN1;
-    int randN2;
-    int randNRes;
+    int randN1, randN2, randNRes;
+    int error_bool = 0;
     srand(time(NULL));
     
-    for(nTest=0; nTest<N_TEST; nTest++){
-        randN1=rand()&MN_DIGIT;
-        randN2&=rand()&MN_DIGIT;
-        randNRes=randN1+randN2;
+    for(nTest = 0; nTest < N_TEST; ++nTest) {
         
-        for(i=0; i<randN1; i++){
-            for(j=0; j<sizeof(DIGIT)/2;j++){
-                randDigit=0;
-                randDigit|=(DIGIT)rand()&(DIGIT)0xFFFF;
-                randDigit=randDigit<<16;
+        randN1 = rand() & MN_DIGIT;
+        while (!randN1) 
+            randN1 = rand() & MN_DIGIT;
+        
+        randN2 = rand() & MN_DIGIT;
+        while (randN2)
+            randN2 = rand() & MN_DIGIT;
+        
+        randNRes = randN1 + randN2;
+        
+        for(i = 0; i < randN1; ++i) {
+            randDigit = 0;
+            for(j = 1; j < sizeof(DIGIT) >> 1; ++j) {
+                randDigit |= (DIGIT) rand() & (DIGIT)0xFFFF;
+                randDigit = randDigit << 16;
             }
-            num1[i]=randDigit;
+            randDigit |= (DIGIT) rand() & (DIGIT)0xFFFF;
+            num1[i] = randDigit;
         }
 
-        for(i=0; i<randN2; i++){
-            for(j=0; j<sizeof(DIGIT)/2;j++){
-                randDigit=0;
-                randDigit|=(DIGIT)rand()&(DIGIT)0xFFFF;
-                randDigit=randDigit<<16;
+        for(i = 0; i < randN2; ++i) {
+            randDigit = 0;
+            for(j = 1; j < sizeof(DIGIT) >> 1; ++j) {
+                randDigit |= (DIGIT) rand() & (DIGIT)0xFFFF;
+                randDigit = randDigit << 16;
             }
-            num2[i]=randDigit;
+            randDigit |= (DIGIT) rand() & (DIGIT)0xFFFF;
+            num2[i] = randDigit;
         }
         
         gf2x_mul_comb(randNRes, res_gf2x, randN1, num1, randN2, num2);
         
         ACK(randNRes, res_ack, randN1, num1, randN2, num2);
 
-        for (i = 0; i < randNRes; i++){
-            if((res_gf2x[i]^res_ack[i])){
-                printf("Confrontation error");
+        for (i = 0; i < randNRes; ++i) 
+            if((res_gf2x[i] ^ res_ack[i])) {
+                
+                printf("\nConfrontation error\n");
+                
                 printf("\nPrint scholastic clmul:\n");
                 for (i = 0; i < randNRes; ++i)
                     printf("0x%016" PRIX64 " ", res_gf2x[i]);
                
                 printf("\nPrint ack:\n");
                 for (i = 0; i < randNRes; ++i)
-                    printf("0x%016" PRIX64 " ", res_ack[i]);        
+                    printf("0x%016" PRIX64 " ", res_ack[i]);    
+                
+                error_bool = 1;
             }
-        }
+            
+        if (!error_bool)
+            printf("\nConfrontation success");  
+        error_bool = 0;
     }
+    
     return (EXIT_SUCCESS);
 }
