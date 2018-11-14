@@ -58,3 +58,7 @@ include nbproject/Makefile-impl.mk
 # include project make variables
 include nbproject/Makefile-variables.mk
 
+operand: operand.c
+	gcc -O2 -o operand operand.c
+	
+
