@@ -26,7 +26,7 @@ inline static DIGIT rand_digit() {
 /*
  * Creates a random array of digit
  */
-void rand_array(DIGIT arr[], int len) {
+void rand_array(DIGIT arr[], const int len) {
     int i;
     for(i = 0; i < len; ++i)  
         arr[i] = rand_digit();

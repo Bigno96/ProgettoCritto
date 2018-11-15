@@ -55,6 +55,21 @@ inline static uint64_t read_rdtsc() {
     return ((uint64_t)lo) | (((uint64_t)hi) << 32);
 }
 
+/*
+ * Update mean and sum of squares of differences from the current mean with Welford's recurrency
+ */
+inline static void update(double *mean, double *M2, 
+                          const uint64_t value, const int n) {
+    
+    double delta = 0.0, delta2 = 0.0;
+    
+    delta = (double)value - *mean;
+    *mean += delta / (double)n;
+    
+    delta2 = (double)value - *mean;
+    *M2 += delta * delta2;
+}
+
 #define N_TEST 100
 
 /*
@@ -63,17 +78,25 @@ inline static uint64_t read_rdtsc() {
 int main(int argc, char** argv) {
     
     FILE *operands = fopen("Test_file/Operands", "r");
+    FILE *ack_result = fopen("Test_file/AckResult.dat", "w");
+    FILE *gf2x_result = fopen("Test_file/Gf2xResult.dat", "w");
 
-    uint64_t time_diff_ack[N_TEST];
-    uint64_t time_diff_gf2x[N_TEST];
     uint64_t ts;
-    
-    int nTest, i;
+    double gf2x_mean;
+    double ack_mean;
+    double gf2x_M2;               // M2 is the sum of squares of differences from the current mean
+    double ack_M2;                // needed for variance calc
+        
+    int n, i;
     int len, lenRes;
         
     while (fscanf(operands, "%d", &len) > 0) {
         
         lenRes = len << 1;
+        gf2x_mean = 0.0;
+        ack_mean = 0.0;
+        gf2x_M2 = 0.0;               // M2 is the sum of squares of differences from the current mean
+        ack_M2 = 0.0;                // needed for variance calc
         
         DIGIT num1[len];
         DIGIT num2[len];
@@ -81,8 +104,8 @@ int main(int argc, char** argv) {
         DIGIT res_ack[lenRes];
         
         printf("\nlen = %d\n", len);                  // DELETE
-    
-        for(nTest = 0; nTest < N_TEST; ++nTest) {
+          
+        for(n = 1; n <= N_TEST; ++n) {
             
             // copy operand from file
             i = 0;
@@ -93,12 +116,20 @@ int main(int argc, char** argv) {
 
             ts = read_rdtsc();                              // save clock count before gf2x multiply
             gf2x_mul_comb(lenRes, res_gf2x, len, num1, len, num2);
-            time_diff_gf2x[nTest] = read_rdtsc() - ts;      // save execution time into time differencial array
+            update(&gf2x_mean, &gf2x_M2, read_rdtsc()-ts, n);       // update mean and M2 with new execution time
             
             ts = read_rdtsc();                              // save clock count before ack multiply
-            ack(lenRes, res_ack, len, num1, len, num2);
-            time_diff_ack[nTest] = read_rdtsc() - ts;       // save execution time into time differencial array
+            ack(lenRes, res_ack, len, num1, len, num2);     
+            update(&ack_mean, &ack_M2, read_rdtsc()-ts, n);         // update mean and M2 with new execution time
         }
+        
+        fprintf(ack_result, "%d     ", len);
+        fprintf(ack_result, "%.5lf    ", ack_mean);
+        fprintf(ack_result, "%.5lf\n", ack_M2 / (double)(N_TEST-1));
+        
+        fprintf(gf2x_result, "%d     ", len);
+        fprintf(gf2x_result, "%.5lf    ", gf2x_mean);
+        fprintf(gf2x_result, "%.5lf\n", gf2x_M2 / (double)(N_TEST-1));
     }
     
     return (EXIT_SUCCESS);
